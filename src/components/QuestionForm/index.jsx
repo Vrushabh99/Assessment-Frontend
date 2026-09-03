@@ -15,10 +15,10 @@ import { NumberField } from '../ui/NumberField'
 import { TextField } from '../ui/TextField'
 
 const emptyQuestion = {
-  title: '',
-  type: 'Single choice',
-  difficulty: 'Easy',
-  status: 'Draft',
+  questionText: '',
+  type: 'single-choice',
+  difficulty: 'easy',
+  status: 'draft',
   points: 1,
   additionalInfo: {
     options: ['', ''],
@@ -27,8 +27,23 @@ const emptyQuestion = {
   },
 }
 
+const typeOptions = [
+  { value: 'single-choice', label: 'Single choice' },
+  { value: 'multiple-choice', label: 'Multiple choice' },
+  { value: 'short-answer', label: 'Short answer' },
+]
+const difficultyOptions = [
+  { value: 'easy', label: 'Easy' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'hard', label: 'Hard' },
+]
+const statusOptions = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+]
+
 /* eslint-disable react/prop-types */
-export function QuestionForm({ question, onCancel, onSave }) {
+export function QuestionForm({ question, onCancel, onSave, isSaving = false, saveError = '' }) {
   const [values, setValues] = useState({
     ...emptyQuestion,
     ...question,
@@ -57,10 +72,10 @@ export function QuestionForm({ question, onCancel, onSave }) {
       type,
       additionalInfo: {
         ...current.additionalInfo,
-        options: type === 'Short answer'
+        options: type === 'short-answer'
           ? []
           : (current.additionalInfo.options?.length ? current.additionalInfo.options : ['', '']),
-        correctAnswers: type === 'Short answer' ? [] : current.additionalInfo.correctAnswers || [],
+        correctAnswers: type === 'short-answer' ? [] : current.additionalInfo.correctAnswers || [],
       },
     }))
   }
@@ -79,7 +94,7 @@ export function QuestionForm({ question, onCancel, onSave }) {
     setValues((current) => {
       const currentAnswers = current.additionalInfo.correctAnswers || []
       const isSelected = currentAnswers.includes(index)
-      const correctAnswers = current.type === 'Single choice'
+      const correctAnswers = current.type === 'single-choice'
         ? (isSelected ? [] : [index])
         : (isSelected ? currentAnswers.filter((answer) => answer !== index) : [...currentAnswers, index])
       return { ...current, additionalInfo: { ...current.additionalInfo, correctAnswers } }
@@ -103,12 +118,12 @@ export function QuestionForm({ question, onCancel, onSave }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (values.type !== 'Short answer' && (!values.additionalInfo.options.length || !values.additionalInfo.correctAnswers.length)) {
+    if (values.type !== 'short-answer' && (!values.additionalInfo.options.length || !values.additionalInfo.correctAnswers.length)) {
       setValidationError('Select at least one correct answer before saving.')
       return
     }
     setValidationError('')
-    onSave({ ...values, id: question?.id })
+    Promise.resolve(onSave({ ...values, id: question?.id })).catch((error) => setValidationError(error.message))
   }
 
   return (
@@ -118,12 +133,12 @@ export function QuestionForm({ question, onCancel, onSave }) {
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
       </FormHeader>
         <Form onSubmit={handleSubmit}>
-          <TextField id="question-title" label="Question" name="title" value={values.title} onChange={updateValue} required multiline rows="4" />
+          <TextField id="question-title" label="Question" name="questionText" value={values.questionText} onChange={updateValue} required multiline rows="4" />
           <FormGrid>
-            <DropDown id="question-type" label="Type" name="type" value={values.type} onChange={changeType} options={['Single choice', 'Multiple choice', 'Short answer'].map((value) => ({ value, label: value }))} />
-            <DropDown id="question-difficulty" label="Difficulty" name="difficulty" value={values.difficulty} onChange={updateValue} options={['Easy', 'Medium', 'Hard'].map((value) => ({ value, label: value }))} />
+            <DropDown id="question-type" label="Type" name="type" value={values.type} onChange={changeType} options={typeOptions} />
+            <DropDown id="question-difficulty" label="Difficulty" name="difficulty" value={values.difficulty} onChange={updateValue} options={difficultyOptions} />
             <NumberField id="question-points" label="Points" name="points" min="0" step="0.5" value={values.points} onChange={updateValue} required />
-            {values.type === 'Short answer' ? (
+            {values.type === 'short-answer' ? (
               <TextField
                   id="expected-answer"
                   label="Expected answer"
@@ -144,7 +159,7 @@ export function QuestionForm({ question, onCancel, onSave }) {
                   <OptionRow key={index}>
                     <CheckboxLabel>
                       <input
-                        type={values.type === 'Single choice' ? 'radio' : 'checkbox'}
+                        type={values.type === 'single-choice' ? 'radio' : 'checkbox'}
                         name="correct-answer"
                         checked={(values.additionalInfo.correctAnswers || []).includes(index)}
                         onChange={() => toggleCorrectAnswer(index)}
@@ -160,10 +175,11 @@ export function QuestionForm({ question, onCancel, onSave }) {
             )}
             {validationError && <ValidationMessage role="alert">{validationError}</ValidationMessage>}
           </FormGrid>
-          <DropDown id="question-status" label="Status" name="status" value={values.status} onChange={updateValue} options={['Draft', 'Published'].map((value) => ({ value, label: value }))} />
+          <DropDown id="question-status" label="Status" name="status" value={values.status} onChange={updateValue} options={statusOptions} />
           <Actions>
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">{isEditing ? 'Save changes' : 'Add question'}</Button>
+            {(validationError || saveError) && <ValidationMessage role="alert">{validationError || saveError}</ValidationMessage>}
+            <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : (isEditing ? 'Save changes' : 'Add question')}</Button>
           </Actions>
         </Form>
     </FormPage>
