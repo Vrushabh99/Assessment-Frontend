@@ -1,18 +1,13 @@
 import { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import styled from 'styled-components'
+import { listQuestions, normalizeQuestion, questionKeys } from '../../../api/questions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { QuestionTable } from '../../../components/QuestionTable'
 import { Button } from '../../../components/ui/Button'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
-
-const initialQuestions = [
-  { id: 'Q-1001', title: 'What is the purpose of a database index?', type: 'Single choice', difficulty: 'Easy', usage: 12, status: 'Published', additionalInfo: { options: ['Faster queries', 'More storage'], correctAnswers: [0] } },
-  { id: 'Q-1002', title: 'Select the valid HTTP methods.', type: 'Multiple choice', difficulty: 'Medium', usage: 8, status: 'Published', additionalInfo: { options: ['GET', 'POST', 'FETCH'], correctAnswers: [0, 1] } },
-  { id: 'Q-1003', title: 'Explain how JWT authentication works.', type: 'Short answer', difficulty: 'Hard', usage: 5, status: 'Draft', additionalInfo: { expectedAnswer: 'A signed token containing claims.' } },
-  { id: 'Q-1004', title: 'Which principle does REST follow?', type: 'Single choice', difficulty: 'Easy', usage: 16, status: 'Published', additionalInfo: { options: ['Statelessness', 'Global state'], correctAnswers: [0] } },
-]
 
 const Header = styled.div`
   display: flex;
@@ -44,20 +39,22 @@ const Toolbar = styled.div`
 
 export function QuestionsDashboardPage() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [search, setSearch] = useState('')
-  const [type, setType] = useState('All types')
-  const savedQuestion = location.state?.savedQuestion
-  const questions = useMemo(() => savedQuestion
-    ? [...initialQuestions.filter(({ id }) => id !== savedQuestion.id), savedQuestion]
-    : initialQuestions, [savedQuestion])
+  const [type, setType] = useState('all')
+  const [status, setStatus] = useState('all')
+  const questionsQuery = useQuery({ queryKey: questionKeys.all, queryFn: listQuestions })
+  const questions = (questionsQuery.data || []).map(normalizeQuestion)
 
   const filteredQuestions = useMemo(() => questions.filter((question) => {
-    const matchesSearch = question.title.toLowerCase().includes(search.toLowerCase())
+    const matchesSearch = question.questionText.toLowerCase().includes(search.toLowerCase())
       || question.id.toLowerCase().includes(search.toLowerCase())
-    const matchesType = type === 'All types' || question.type === type
-    return matchesSearch && matchesType
-  }), [questions, search, type])
+    const matchesType = type === 'all' || question.type === type
+    const matchesStatus = status === 'all' || question.status === status
+    return matchesSearch && matchesType && matchesStatus
+  }), [questions, search, status, type])
+
+  if (questionsQuery.isLoading) return <DashboardLayout title="Questions" role="Administrator"><Muted>Loading questions...</Muted></DashboardLayout>
+  if (questionsQuery.isError) return <DashboardLayout title="Questions" role="Administrator"><Muted role="alert">{questionsQuery.error.message}</Muted></DashboardLayout>
 
   return (
     <DashboardLayout title="Questions" role="Administrator">
@@ -70,15 +67,16 @@ export function QuestionsDashboardPage() {
       </Header>
       <Stats>
         <StatCard><StatLabel>Total questions</StatLabel><StatValue>{questions.length}</StatValue></StatCard>
-        <StatCard><StatLabel>Published</StatLabel><StatValue>{questions.filter(({ status }) => status === 'Published').length}</StatValue></StatCard>
+        <StatCard><StatLabel>Published</StatLabel><StatValue>{questions.filter(({ status }) => status === 'published').length}</StatValue></StatCard>
         <StatCard><StatLabel>Used in assessments</StatLabel><StatValue>{questions.reduce((total, question) => total + question.usage, 0)}</StatValue></StatCard>
       </Stats>
       <Card>
         <Toolbar>
           <TextField id="question-search" aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <DropDown id="question-type-filter" aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)} options={['All types', 'Single choice', 'Multiple choice', 'Short answer'].map((value) => ({ value, label: value }))} />
+          <DropDown id="question-type-filter" aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)} options={[{ value: 'all', label: 'All types' }, { value: 'single-choice', label: 'Single choice' }, { value: 'multiple-choice', label: 'Multiple choice' }, { value: 'short-answer', label: 'Short answer' }]} />
+          <DropDown id="question-status-filter" aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }]} />
         </Toolbar>
-        <QuestionTable questions={filteredQuestions} onEdit={(question) => navigate(`/admin/questions/${question.id}/edit`, { state: { question } })} />
+        <QuestionTable questions={filteredQuestions} onEdit={(question) => navigate(`/admin/questions/${question.id}/edit`)} />
       </Card>
     </DashboardLayout>
   )
