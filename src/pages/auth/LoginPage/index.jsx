@@ -1,7 +1,7 @@
-import { ROLES } from '../../constants/roles'
+import { ROLES } from '../../../constants/roles'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../../context/AuthContext'
 import { useEffect, useState } from 'react'
 
 const CenteredPage = styled.main`

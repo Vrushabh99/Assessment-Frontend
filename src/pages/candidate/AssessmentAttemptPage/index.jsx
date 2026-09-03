@@ -1,4 +1,4 @@
-import { DashboardLayout } from '../../layouts/DashboardLayout'
+import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 

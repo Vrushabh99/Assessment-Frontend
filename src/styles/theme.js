@@ -10,6 +10,8 @@ export const theme = {
     primarySoft: '#eef1ff',
     primaryText: '#4055c7',
     danger: '#b42318',
+    successBackground: '#e7f6ec',
+    successText: '#18713b',
     shadow: 'rgb(23 32 51 / 6%)',
   },
 }

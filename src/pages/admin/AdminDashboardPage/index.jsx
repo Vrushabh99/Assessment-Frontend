@@ -1,4 +1,4 @@
-import { DashboardLayout } from '../../layouts/DashboardLayout'
+import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import styled from 'styled-components'
 
 const PageGrid = styled.div`

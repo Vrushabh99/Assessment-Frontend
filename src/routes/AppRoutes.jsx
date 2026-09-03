@@ -3,6 +3,7 @@ import { ProtectedRoute } from '../components/ProtectedRoute'
 import { ROLES } from '../constants/roles'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AssessmentManagementPage } from '../pages/admin/AssessmentManagementPage'
+import { QuestionsDashboardPage } from '../pages/admin/QuestionsDashboardPage'
 import { CandidateDashboardPage } from '../pages/candidate/CandidateDashboardPage'
 import { AssessmentAttemptPage } from '../pages/candidate/AssessmentAttemptPage'
 import { LoginPage } from '../pages/auth/LoginPage'
@@ -21,6 +22,10 @@ export function AppRoutes() {
         <Route
           path="/admin/assessments"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssessmentManagementPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/questions"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><QuestionsDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/candidate"

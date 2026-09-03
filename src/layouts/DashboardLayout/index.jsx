@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 
 const Dashboard = styled.main`min-height: 100vh;`
 const Container = styled.div`width: min(100% - 48px, 1120px); margin: 0 auto;`
@@ -49,6 +49,7 @@ export function DashboardLayout({ title, role, children }) {
           <>
             <NavigationLink to="/admin">Dashboard</NavigationLink>
             <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
+            <NavigationLink to="/admin/questions">Questions</NavigationLink>
           </>
         ) : (
           <>
