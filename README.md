@@ -2,7 +2,7 @@
 
 React/Vite client for the proctored assessment platform.
 
-Copy `.env.example` to `.env` and set `VITE_API_BASE_URL` to the backend API URL before starting the app.
+Copy `.env.example` to `.env` and set `VITE_API_BASE_URL` to the backend API URL before starting the app. For Vercel deployment, use `/api`; `vercel.json` proxies those requests to the Render backend so authentication cookies remain same-origin.
 
 ## Source structure
 
