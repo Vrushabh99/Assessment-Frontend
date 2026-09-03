@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%">
+  <defs>
+    <!-- Deep Navy to Slate Gradient -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F2D6B" />
+      <stop offset="50%" stop-color="#0C4A8E" />
+      <stop offset="100%" stop-color="#021B42" />
+    </linearGradient>
+
+    <!-- Cyan to Electric Blue Gradient -->
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A3FF" />
+      <stop offset="50%" stop-color="#00C4D4" />
+      <stop offset="100%" stop-color="#0080FF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Shield Boundary -->
+  <path d="M 100 18
+           L 175 42
+           C 175 118, 146 188, 100 220
+           C 54 188, 25 118, 25 42
+           Z"
+        fill="none"
+        stroke="url(#shieldGrad)"
+        stroke-width="18"
+        stroke-linejoin="round"
+        stroke-linecap="round" />
+
+  <!-- Eye Arch (Observational Lens) -->
+  <path d="M 48 116
+           C 68 74, 132 74, 152 116
+           C 132 158, 68 158, 48 116
+           Z"
+        fill="none"
+        stroke="url(#eyeGrad)"
+        stroke-width="13"
+        stroke-linejoin="round" />
+
+  <!-- Iris / Pupil -->
+  <circle cx="100" cy="116" r="20" fill="#0A1D37" />
+  <circle cx="106" cy="110" r="6" fill="#FFFFFF" />
+
+  <!-- Integrity Anchor / Arrow -->
+  <path d="M 100 156
+           L 100 196
+           M 86 182
+           L 100 197
+           L 114 182"
+        fill="none"
+        stroke="url(#eyeGrad)"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+</svg>
