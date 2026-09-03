@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createQuestion, getQuestion, normalizeQuestion, questionKeys, updateQuestion } from '../../../api/questions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { QuestionForm } from '../../../components/QuestionForm'
+import { CommonLoader } from '../../../components/ui/CommonLoader'
 
 export function QuestionEditorPage() {
   const navigate = useNavigate()
@@ -27,7 +28,7 @@ export function QuestionEditorPage() {
     navigate('/admin/questions')
   }
 
-  if (questionId && questionQuery.isLoading) return <DashboardLayout title="Edit question" role="Administrator">Loading question...</DashboardLayout>
+  if (questionId && questionQuery.isLoading) return <DashboardLayout title="Edit question" role="Administrator"><CommonLoader label="Loading question..." /></DashboardLayout>
   if (questionId && questionQuery.isError) return <DashboardLayout title="Edit question" role="Administrator"><p role="alert">{questionQuery.error.message}</p></DashboardLayout>
 
   return (

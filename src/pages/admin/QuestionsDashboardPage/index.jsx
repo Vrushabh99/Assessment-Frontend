@@ -8,6 +8,7 @@ import { QuestionTable } from '../../../components/QuestionTable'
 import { Button } from '../../../components/ui/Button'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
+import { CommonLoader } from '../../../components/ui/CommonLoader'
 
 const Header = styled.div`
   display: flex;
@@ -53,7 +54,7 @@ export function QuestionsDashboardPage() {
     return matchesSearch && matchesType && matchesStatus
   }), [questions, search, status, type])
 
-  if (questionsQuery.isLoading) return <DashboardLayout title="Questions" role="Administrator"><Muted>Loading questions...</Muted></DashboardLayout>
+  if (questionsQuery.isLoading) return <DashboardLayout title="Questions" role="Administrator"><CommonLoader label="Loading questions..." /></DashboardLayout>
   if (questionsQuery.isError) return <DashboardLayout title="Questions" role="Administrator"><Muted role="alert">{questionsQuery.error.message}</Muted></DashboardLayout>
 
   return (
