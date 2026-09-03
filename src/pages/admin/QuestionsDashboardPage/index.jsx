@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { QuestionTable } from '../../../components/QuestionTable'
+import { Button } from '../../../components/ui/Button'
+import { DropDown } from '../../../components/ui/DropDown'
+import { TextField } from '../../../components/ui/TextField'
 
-const questions = [
-  { id: 'Q-1001', title: 'What is the purpose of a database index?', type: 'Single choice', difficulty: 'Easy', usage: 12, status: 'Published' },
-  { id: 'Q-1002', title: 'Select the valid HTTP methods.', type: 'Multiple choice', difficulty: 'Medium', usage: 8, status: 'Published' },
-  { id: 'Q-1003', title: 'Explain how JWT authentication works.', type: 'Short answer', difficulty: 'Hard', usage: 5, status: 'Draft' },
-  { id: 'Q-1004', title: 'Which principle does REST follow?', type: 'Single choice', difficulty: 'Easy', usage: 16, status: 'Published' },
+const initialQuestions = [
+  { id: 'Q-1001', title: 'What is the purpose of a database index?', type: 'Single choice', difficulty: 'Easy', usage: 12, status: 'Published', additionalInfo: { options: ['Faster queries', 'More storage'], correctAnswers: [0] } },
+  { id: 'Q-1002', title: 'Select the valid HTTP methods.', type: 'Multiple choice', difficulty: 'Medium', usage: 8, status: 'Published', additionalInfo: { options: ['GET', 'POST', 'FETCH'], correctAnswers: [0, 1] } },
+  { id: 'Q-1003', title: 'Explain how JWT authentication works.', type: 'Short answer', difficulty: 'Hard', usage: 5, status: 'Draft', additionalInfo: { expectedAnswer: 'A signed token containing claims.' } },
+  { id: 'Q-1004', title: 'Which principle does REST follow?', type: 'Single choice', difficulty: 'Easy', usage: 16, status: 'Published', additionalInfo: { options: ['Statelessness', 'Global state'], correctAnswers: [0] } },
 ]
 
 const Header = styled.div`
@@ -18,11 +22,6 @@ const Header = styled.div`
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-const PrimaryButton = styled.button`
-  border: 0; border-radius: 8px; background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.surface}; cursor: pointer; font: inherit;
-  font-weight: 600; padding: 11px 16px; white-space: nowrap;
-`
 const Stats = styled.div`
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
   @media (max-width: 640px) { grid-template-columns: 1fr; }
@@ -42,25 +41,23 @@ const Toolbar = styled.div`
   display: flex; gap: 12px; padding: 20px; border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 640px) { flex-direction: column; }
 `
-const Search = styled.input`
-  flex: 1; border: 1px solid ${({ theme }) => theme.colors.inputBorder};
-  border-radius: 8px; font: inherit; padding: 10px 12px;
-`
-const Select = styled.select`
-  border: 1px solid ${({ theme }) => theme.colors.inputBorder};
-  border-radius: 8px; background: ${({ theme }) => theme.colors.surface}; font: inherit; padding: 10px 12px;
-`
 
 export function QuestionsDashboardPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [search, setSearch] = useState('')
   const [type, setType] = useState('All types')
+  const savedQuestion = location.state?.savedQuestion
+  const questions = useMemo(() => savedQuestion
+    ? [...initialQuestions.filter(({ id }) => id !== savedQuestion.id), savedQuestion]
+    : initialQuestions, [savedQuestion])
 
   const filteredQuestions = useMemo(() => questions.filter((question) => {
     const matchesSearch = question.title.toLowerCase().includes(search.toLowerCase())
       || question.id.toLowerCase().includes(search.toLowerCase())
     const matchesType = type === 'All types' || question.type === type
     return matchesSearch && matchesType
-  }), [search, type])
+  }), [questions, search, type])
 
   return (
     <DashboardLayout title="Questions" role="Administrator">
@@ -69,7 +66,7 @@ export function QuestionsDashboardPage() {
           <h2>Question bank</h2>
           <Muted>Create, organize, and reuse questions across assessments.</Muted>
         </div>
-        <PrimaryButton type="button">+ Add question</PrimaryButton>
+        <Button type="button" onClick={() => navigate('/admin/questions/new')}>+ Add question</Button>
       </Header>
       <Stats>
         <StatCard><StatLabel>Total questions</StatLabel><StatValue>{questions.length}</StatValue></StatCard>
@@ -78,15 +75,10 @@ export function QuestionsDashboardPage() {
       </Stats>
       <Card>
         <Toolbar>
-          <Search aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <Select aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)}>
-            <option>All types</option>
-            <option>Single choice</option>
-            <option>Multiple choice</option>
-            <option>Short answer</option>
-          </Select>
+          <TextField id="question-search" aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <DropDown id="question-type-filter" aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)} options={['All types', 'Single choice', 'Multiple choice', 'Short answer'].map((value) => ({ value, label: value }))} />
         </Toolbar>
-        <QuestionTable questions={filteredQuestions} />
+        <QuestionTable questions={filteredQuestions} onEdit={(question) => navigate(`/admin/questions/${question.id}/edit`, { state: { question } })} />
       </Card>
     </DashboardLayout>
   )

@@ -13,5 +13,6 @@ export const theme = {
     successBackground: '#e7f6ec',
     successText: '#18713b',
     shadow: 'rgb(23 32 51 / 6%)',
+    overlay: 'rgb(23 32 51 / 45%)',
   },
 }

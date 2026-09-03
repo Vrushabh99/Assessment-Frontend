@@ -4,6 +4,7 @@ import { ROLES } from '../constants/roles'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AssessmentManagementPage } from '../pages/admin/AssessmentManagementPage'
 import { QuestionsDashboardPage } from '../pages/admin/QuestionsDashboardPage'
+import { QuestionEditorPage } from '../pages/admin/QuestionEditorPage'
 import { CandidateDashboardPage } from '../pages/candidate/CandidateDashboardPage'
 import { AssessmentAttemptPage } from '../pages/candidate/AssessmentAttemptPage'
 import { LoginPage } from '../pages/auth/LoginPage'
@@ -26,6 +27,14 @@ export function AppRoutes() {
         <Route
           path="/admin/questions"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><QuestionsDashboardPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/questions/new"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><QuestionEditorPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/questions/:questionId/edit"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><QuestionEditorPage /></ProtectedRoute>}
         />
         <Route
           path="/candidate"
