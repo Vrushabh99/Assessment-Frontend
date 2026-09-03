@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import styled from 'styled-components'
@@ -37,14 +37,40 @@ const Toolbar = styled.div`
   display: flex; gap: 12px; padding: 20px; border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 640px) { flex-direction: column; }
 `
+const Pagination = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.muted};
+  font-size: 0.85rem;
+  @media (max-width: 480px) { justify-content: space-between; padding: 14px; }
+`
 
 export function QuestionsDashboardPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [type, setType] = useState('all')
   const [status, setStatus] = useState('all')
-  const questionsQuery = useQuery({ queryKey: questionKeys.all, queryFn: listQuestions })
-  const questions = (questionsQuery.data || []).map(normalizeQuestion)
+  const [page, setPage] = useState(1)
+  const limit = 2
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timeout)
+  }, [search])
+
+  useEffect(() => setPage(1), [debouncedSearch])
+
+  const questionsQuery = useQuery({
+    queryKey: [...questionKeys.all, { page, limit, search: debouncedSearch }],
+    queryFn: () => listQuestions({ page, limit, search: debouncedSearch }),
+    placeholderData: (previousData) => previousData,
+  })
+  const questions = (questionsQuery.data?.items || []).map(normalizeQuestion)
 
   const filteredQuestions = useMemo(() => questions.filter((question) => {
     const matchesSearch = question.questionText.toLowerCase().includes(search.toLowerCase())
@@ -78,6 +104,13 @@ export function QuestionsDashboardPage() {
           <DropDown id="question-status-filter" aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }]} />
         </Toolbar>
         <QuestionTable questions={filteredQuestions} onEdit={(question) => navigate(`/admin/questions/${question.id}/edit`)} />
+        {(questionsQuery.data?.totalPages || 1) > 1 && (
+          <Pagination>
+            <Button type="button" variant="secondary" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</Button>
+            <span>Page {page} of {questionsQuery.data.totalPages}</span>
+            <Button type="button" variant="secondary" disabled={page === questionsQuery.data.totalPages} onClick={() => setPage(page + 1)}>Next</Button>
+          </Pagination>
+        )}
       </Card>
     </DashboardLayout>
   )
