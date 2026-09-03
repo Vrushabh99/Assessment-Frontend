@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAuth } from '../../../context/AuthContext'
 import { useEffect, useState } from 'react'
+import { Button } from '../../../components/ui/Button'
+import { TextField } from '../../../components/ui/TextField'
 
 const CenteredPage = styled.main`
   display: grid;
@@ -30,16 +32,7 @@ const Eyebrow = styled.div`
   flex-direction: column;
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-const Button = styled.button`
-  border: 0; border-radius: 8px; background: ${({ theme }) => theme.colors.primary}; color: ${({ theme }) => theme.colors.surface}; cursor: pointer;
-  font: inherit; font-weight: 600; padding: 11px 16px;
-`
 const Form = styled.form`display: grid; gap: 16px; margin-top: 24px;`
-const Label = styled.label`display: grid; gap: 6px; font-weight: 600;`
-const Input = styled.input`
-  border: 1px solid ${({ theme }) => theme.colors.inputBorder}; border-radius: 8px; font: inherit; padding: 11px 12px;
-  &:focus { border-color: ${({ theme }) => theme.colors.primary}; outline: 2px solid ${({ theme }) => theme.colors.primarySoft}; }
-`
 const ErrorMessage = styled.p`margin: 0; color: ${({ theme }) => theme.colors.danger};`
 
 export function LoginPage() {
@@ -80,8 +73,8 @@ export function LoginPage() {
         <h1>Log In</h1>
         <Muted>Use your account to access your assessment workspace.</Muted>
         <Form onSubmit={handleSubmit}>
-          <Label htmlFor="email">Email<Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" /></Label>
-          <Label htmlFor="password">Password<Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></Label>
+          <TextField id="email" label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" />
+          <TextField id="password" label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" />
           {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
           <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Signing in...' : 'Sign in'}</Button>
         </Form>

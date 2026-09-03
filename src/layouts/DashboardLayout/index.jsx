@@ -2,6 +2,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAuth } from '../../context/AuthContext'
+import { Button } from '../../components/ui/Button'
 
 const Dashboard = styled.main`min-height: 100vh;`
 const Container = styled.div`width: min(100% - 48px, 1120px); margin: 0 auto;`
@@ -14,10 +15,6 @@ const Eyebrow = styled.p`
   letter-spacing: 0.08em; text-transform: uppercase;
 `
 const UserMenu = styled.div`display: flex; align-items: center; gap: 16px; color: ${({ theme }) => theme.colors.muted};`
-const TextButton = styled.button`
-  border: 0; padding: 0; background: transparent; color: ${({ theme }) => theme.colors.primary}; cursor: pointer;
-  font: inherit; font-weight: 600;
-`
 const Navigation = styled.nav`display: flex; gap: 20px; margin: 0 0 24px;`
 const NavigationLink = styled(Link)`color: ${({ theme }) => theme.colors.primary}; font-weight: 600; text-decoration: none;`
 const Content = styled.div`display: grid; gap: 20px;`
@@ -41,7 +38,7 @@ export function DashboardLayout({ title, role, children }) {
         </div>
         <UserMenu>
           <span>{role}</span>
-          <TextButton type="button" onClick={signOut}>Sign out</TextButton>
+          <Button type="button" variant="secondary" onClick={signOut}>Sign out</Button>
         </UserMenu>
       </Topbar>
       <Navigation aria-label="Workspace navigation">
