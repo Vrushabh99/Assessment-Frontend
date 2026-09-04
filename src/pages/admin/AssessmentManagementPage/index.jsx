@@ -169,7 +169,12 @@ export function AssessmentManagementPage() {
       >
         <MenuItem onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}/edit`) }}>Edit</MenuItem>
         <MenuItem onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}`) }}>View</MenuItem>
-        <MenuItem onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}/assign`) }}>Assign</MenuItem>
+        <MenuItem
+          onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}/assign`) }}
+          disabled={activeAssessment?.status !== 'published'}
+        >
+          Assign
+        </MenuItem>
         <MenuItem onClick={handleDelete} disabled={deleteMutation.isPending} sx={{ color: 'error.main' }}>
           {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
         </MenuItem>
