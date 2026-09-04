@@ -70,18 +70,13 @@ export const UserInfo = styled.div`
 `
 
 export const PageHeading = styled.div`
-  padding: 32px 0 20px;
-  h1 { margin: 0; }
-  @media (max-width: 640px) {
-    padding: 24px 0 16px;
-    h1 { font-size: 1.6rem; }
-  }
+  padding: 16px 0 16px;
 `
 
 export const Eyebrow = styled.p`
   margin: 0 0 8px;
   color: ${({ theme }) => theme.colors.primary};
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

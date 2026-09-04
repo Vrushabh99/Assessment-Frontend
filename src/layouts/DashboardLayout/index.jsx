@@ -80,7 +80,6 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
           <>
         <PageHeading>
           <Eyebrow>{role} workspace</Eyebrow>
-          <h1>{title}</h1>
         </PageHeading>
           <Navigation aria-label="Workspace navigation">
           {role === 'Administrator' && (

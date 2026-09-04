@@ -14,12 +14,17 @@ export const QuestionHeader = styled.div`
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
+  flex-wrap: wrap;
 `
 
 export const QuestionTitle = styled.h3`
   margin: 0;
   font-size: 1rem;
   line-height: 1.5;
+  max-width: calc(100% - 250px);
+  @media(max-width: 760px) {
+    max-width: 100%;
+  }
 `
 
 export const QuestionMeta = styled.span`

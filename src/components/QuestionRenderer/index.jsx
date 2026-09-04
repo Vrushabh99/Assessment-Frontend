@@ -67,9 +67,9 @@ export function QuestionRenderer({
         <QuestionTitle>{question.questionText}</QuestionTitle>
         <QuestionMeta>
           <Pill tone="info">{question.type.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')}</Pill>
-          <div>
+          <Pill tone="info">
             {question.points} point{question.points === 1 ? '' : 's'}
-          </div>
+          </Pill>
         </QuestionMeta>
       </QuestionHeader>
 

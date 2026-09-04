@@ -16,7 +16,7 @@ const tones = {
   success: {
     background: '#e7f6ec',
     color: '#18713b',
-  },
+  }
 }
 
 export const PillContent = styled.span`
