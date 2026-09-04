@@ -121,6 +121,7 @@ export function AssignmentManagementPage() {
   const getMenuItems = (assignment) => {
     const assessmentId = getAssessmentId(assignment)
     return [
+      { id: 'preview', label: 'Preview', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
       { id: 'view', label: 'View', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
       { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}/edit`) },
       { isDivider: true },
