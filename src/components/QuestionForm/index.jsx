@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import IconButton from '@mui/material/IconButton'
 import {
   Actions,
   Form,
@@ -7,12 +10,16 @@ import {
   FormHeader,
   OptionRow,
   CheckboxLabel,
+  SectionHeader,
+  SectionActions,
   ValidationMessage,
 } from './styles'
 import { Button } from '../ui/Button'
 import { DropDown } from '../ui/DropDown'
 import { NumberField } from '../ui/NumberField'
 import { TextField } from '../ui/TextField'
+import { QuestionRenderer } from '../QuestionRenderer'
+import { QUESTION_RENDERER_MODES } from '../QuestionRenderer/constants'
 
 const emptyQuestion = {
   questionText: '',
@@ -50,6 +57,7 @@ export function QuestionForm({ question, onCancel, onSave, isSaving = false, sav
     additionalInfo: { ...emptyQuestion.additionalInfo, ...question?.additionalInfo },
   })
   const [validationError, setValidationError] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
   const isEditing = Boolean(question)
 
   useEffect(() => {
@@ -130,9 +138,11 @@ export function QuestionForm({ question, onCancel, onSave, isSaving = false, sav
     <FormPage>
       <FormHeader>
         <h2 id="question-form-title">{isEditing ? 'Edit question' : 'Add question'}</h2>
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Actions>
+          <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+        </Actions>
       </FormHeader>
-        <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
           <TextField id="question-title" label="Question" name="questionText" value={values.questionText} onChange={updateValue} required multiline rows="4" />
           <FormGrid>
             <DropDown id="question-type" label="Type" name="type" value={values.type} onChange={changeType} options={typeOptions} />
@@ -154,7 +164,19 @@ export function QuestionForm({ question, onCancel, onSave, isSaving = false, sav
                 />
             ) : (
               <div>
-                <p>Answer options and scoring</p>
+                <SectionHeader>
+                  <strong>Answer options and scoring</strong>
+                  <SectionActions>
+                    <IconButton
+                      type="button"
+                      aria-label={showPreview ? 'Edit question' : 'Preview question'}
+                      title={showPreview ? 'Edit question' : 'Preview question'}
+                      onClick={() => setShowPreview((current) => !current)}
+                    >
+                      {showPreview ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                    </IconButton>
+                  </SectionActions>
+                </SectionHeader>
                 {values.additionalInfo.options.map((option, index) => (
                   <OptionRow key={index}>
                     <CheckboxLabel>
@@ -175,6 +197,13 @@ export function QuestionForm({ question, onCancel, onSave, isSaving = false, sav
             )}
             {validationError && <ValidationMessage role="alert">{validationError}</ValidationMessage>}
           </FormGrid>
+          {showPreview && (
+            <QuestionRenderer
+              key={values.type}
+              question={values}
+              mode={QUESTION_RENDERER_MODES.PREVIEW}
+            />
+          )}
           <DropDown id="question-status" label="Status" name="status" value={values.status} onChange={updateValue} options={statusOptions} />
           <Actions>
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

@@ -19,5 +19,7 @@ export const OptionRow = styled.div`
   & > *:nth-child(2) { flex: 1 1 220px; min-width: 0; }
 `
 export const CheckboxLabel = styled.label`display: flex; align-items: center; gap: 6px; color: ${({ theme }) => theme.colors.muted}; font-size: 0.85rem; white-space: nowrap;`
+export const SectionHeader = styled.div`display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;`
+export const SectionActions = styled.div`display: flex; align-items: center; justify-content: flex-end; margin-left: auto;`
 export const ValidationMessage = styled.p`margin: 0; color: ${({ theme }) => theme.colors.danger};`
 export const Actions = styled.div`display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px;`
