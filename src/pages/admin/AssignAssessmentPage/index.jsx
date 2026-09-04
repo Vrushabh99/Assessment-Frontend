@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Accordion,
@@ -20,6 +20,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { apiRequest } from '../../../api/client'
 import { assessmentKeys, getAssessment } from '../../../api/assessments'
+import { assignAssessment, assignmentKeys, getAssignment, updateAssignment } from '../../../api/assignments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -33,6 +34,14 @@ const violationLabels = { tab_switch: 'Tab switch', window_blur: 'Window blur', 
 const hourOptions = [{ value: '', label: 'Select hours' }, ...Array.from({ length: 25 }, (_, value) => ({ value: String(value), label: String(value) }))]
 const minuteOptions = [{ value: '', label: 'Select minutes' }, ...Array.from({ length: 60 }, (_, value) => ({ value: String(value), label: String(value) }))]
 
+const toDateTimeInput = (value) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (part) => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 const normalizeCandidates = (payload) => {
   const candidates = payload?.candidates || payload?.users || payload || []
   return Array.isArray(candidates) ? candidates : []
@@ -40,11 +49,12 @@ const normalizeCandidates = (payload) => {
 
 export function AssignAssessmentPage() {
   const navigate = useNavigate()
-  const { assessmentId } = useParams()
-  const assessmentQuery = useQuery({
-    queryKey: assessmentKeys.detail(assessmentId),
-    queryFn: () => getAssessment(assessmentId),
-    enabled: Boolean(assessmentId),
+  const { assessmentId, assignmentId } = useParams()
+  const isEdit = Boolean(assignmentId)
+  const assignmentQuery = useQuery({
+    queryKey: assignmentKeys.detail(assignmentId),
+    queryFn: () => getAssignment(assignmentId),
+    enabled: isEdit,
   })
   const fetchedCandidates = useRef(false)
   const [candidateOptions, setCandidateOptions] = useState([])
@@ -60,10 +70,37 @@ export function AssignAssessmentPage() {
   const [candidateLoading, setCandidateLoading] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [step, setStep] = useState(0)
+  const assignmentResponse = assignmentQuery.data
+  const assignment = assignmentResponse?.assignment || assignmentResponse
+  const assignmentStudents = useMemo(
+    () => assignmentResponse?.students || assignment?.students || [],
+    [assignmentResponse, assignment],
+  )
+  const assignedAssessment = assignment?.assessmentId
+  const assessmentIdForQuery = isEdit ? undefined : assessmentId
+  const assessmentQuery = useQuery({
+    queryKey: assessmentKeys.detail(assessmentIdForQuery),
+    queryFn: () => getAssessment(assessmentIdForQuery),
+    enabled: Boolean(assessmentIdForQuery),
+  })
+  const assessment = isEdit
+    ? assignedAssessment
+    : assessmentQuery.data?.assessment || assessmentQuery.data
+
   const candidatesPerPage = 8
   const candidatePageCount = Math.max(1, Math.ceil(candidateOptions.length / candidatesPerPage))
   const visibleCandidates = candidateOptions.slice((candidatePage - 1) * candidatesPerPage, candidatePage * candidatesPerPage)
   const totalDurationMinutes = (Number(durationHours || 0) * 60) + Number(durationMinutes || 0)
+
+  useEffect(() => {
+    if (!isEdit || !assignment) return
+    setDurationHours(String(Math.floor(assignment.durationMinutes / 60)))
+    setDurationMinutes(String(assignment.durationMinutes % 60))
+    setExpiresAt(toDateTimeInput(assignment.expiresAt))
+    setDescription(assignment.description || '')
+    setViolationLimits({ ...defaultViolationLimits, ...assignment.violationLimits })
+    setSelectedCandidates(assignmentStudents.map((student) => student.candidate || student.candidateId).filter(Boolean))
+  }, [assignment, assignmentStudents, isEdit])
 
   useEffect(() => {
     if (fetchedCandidates.current) return
@@ -86,7 +123,8 @@ export function AssignAssessmentPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const goToCandidateStep = () => {
+  const goToCandidateStep = (event) => {
+    event.preventDefault()
     if (validateConfiguration()) setStep(1)
   }
 
@@ -99,23 +137,39 @@ export function AssignAssessmentPage() {
 
     setLoading(true)
     try {
-      const response = await apiRequest(`/admin/assessments/${assessmentId}/assign`, {
-        method: 'POST',
-        body: JSON.stringify({
-          candidateIds: selectedCandidates.map((candidate) => candidate._id),
-          durationMinutes: (Number(durationHours || 0) * 60) + Number(durationMinutes || 0),
-          violationLimits,
-          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
-          description: description || undefined,
-        }),
-      })
+      const duration = (Number(durationHours || 0) * 60) + Number(durationMinutes || 0)
+      const payload = {
+        durationMinutes: duration,
+        violationLimits,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+        description: description || undefined,
+      }
+      const existingIds = new Set(assignmentStudents.map((student) => {
+        const candidate = student.candidate || student.candidateId
+        return candidate?._id || candidate?.id || candidate
+      }))
+      const response = isEdit
+        ? await updateAssignment({ id: assignmentId, ...payload }).then(async (result) => {
+          const newCandidates = selectedCandidates.filter((candidate) => !existingIds.has(candidate._id || candidate.id))
+          if (!newCandidates.length) return { data: result }
+          return assignAssessment({
+            assessmentId: assignedAssessment?._id || assignedAssessment?.id || assignedAssessment,
+            assignmentId,
+            ...payload,
+            candidateIds: newCandidates.map((candidate) => candidate._id || candidate.id),
+          })
+        })
+        : await apiRequest(`/admin/assessments/${assessmentId}/assign`, {
+          method: 'POST',
+          body: JSON.stringify({ ...payload, candidateIds: selectedCandidates.map((candidate) => candidate._id) }),
+        })
       const result = response.data || {}
       const skipped = result.skipped || {}
       let message = `${result.studentsAssigned || 0} candidate(s) assigned.`
       if (skipped.alreadyAssigned?.length) message += ` ${skipped.alreadyAssigned.length} were already assigned to this assessment.`
       if (skipped.invalidCandidateIds?.length) message += ` ${skipped.invalidCandidateIds.length} candidate ID(s) were invalid.`
       setSnackbar({ open: true, message, severity: 'success' })
-      navigate('/admin/assessments')
+      navigate(isEdit ? '/admin/assignments' : '/admin/assessments')
     } catch (error) {
       setSnackbar({ open: true, message: error.message, severity: 'error' })
     } finally {
@@ -124,21 +178,21 @@ export function AssignAssessmentPage() {
   }
 
   return (
-    <DashboardLayout title="Assign assessment" role="Administrator">
+    <DashboardLayout title={isEdit ? 'Edit assignment' : 'Assign assessment'} role="Administrator">
       <Page>
         <FormHeader>
           <div>
-            <h2>{assessmentQuery.data?.title || 'Assign assessment'}</h2>
-            <p>Select candidates and configure assessment access.</p>
+            <h2>{assessment?.title || (isEdit ? 'Edit assignment' : 'Assign assessment')}</h2>
+            <p>{isEdit ? 'Update assignment settings and add candidates.' : 'Select candidates and configure assessment access.'}</p>
           </div>
         </FormHeader>
-        {assessmentQuery.isLoading && <CommonLoader label="Loading assessment details..." />}
-        {assessmentQuery.isError && <Typography color="error">{assessmentQuery.error.message}</Typography>}
-        {assessmentQuery.data && (
+        {(assessmentQuery.isLoading || assignmentQuery.isLoading) && <CommonLoader label={isEdit ? 'Loading assignment...' : 'Loading assessment details...'} />}
+        {(assessmentQuery.isError || assignmentQuery.isError) && <Typography color="error">{(assessmentQuery.error || assignmentQuery.error).message}</Typography>}
+        {assessment && (
           <Summary aria-label="Assessment summary">
-            <SummaryItem><strong>Assessment</strong><span>{assessmentQuery.data.title}</span></SummaryItem>
-            <SummaryItem><strong>Questions</strong><span>{assessmentQuery.data.questionIds?.length || 0}</span></SummaryItem>
-            <SummaryItem><strong>Total points</strong><span>{assessmentQuery.data.totalPoints || 0}</span></SummaryItem>
+            <SummaryItem><strong>Assessment</strong><span>{assessment.title}</span></SummaryItem>
+            <SummaryItem><strong>Questions</strong><span>{assessment.questionIds?.length || 0}</span></SummaryItem>
+            <SummaryItem><strong>Total points</strong><span>{assessment.totalPoints || 0}</span></SummaryItem>
           </Summary>
         )}
         <Stepper activeStep={step} sx={{ mb: 3 }}>
@@ -225,14 +279,14 @@ export function AssignAssessmentPage() {
             </Stack>
           )}
           <Actions>
-            <Button type="button" variant="secondary" disabled={loading} onClick={() => navigate('/admin/assessments')}>Cancel</Button>
+            <Button type="button" variant="secondary" disabled={loading} onClick={() => navigate(isEdit ? '/admin/assignments' : '/admin/assessments')}>Cancel</Button>
             {step === 1 && <Button type="button" variant="secondary" disabled={loading} onClick={() => setStep(0)}>Back</Button>}
             {step === 0 ? (
               <Button type="button" disabled={loading} onClick={goToCandidateStep}>Next: select candidates</Button>
             ) : (
               <Button type="submit" disabled={loading}>
                 {loading && <CircularProgress size={20} sx={{ mr: 1, color: 'inherit' }} />}
-                Assign assessment
+                {isEdit ? 'Save changes' : 'Assign assessment'}
               </Button>
             )}
           </Actions>
