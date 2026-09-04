@@ -47,7 +47,20 @@ const AssignmentCard = styled.article`
 `
 const AssignmentContent = styled.div`display: grid; gap: 10px; min-width: 0;`
 const CardActions = styled.div`display: flex; align-items: center; gap: 8px;`
+const AssignmentTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+`
 const AssignmentTitle = styled.h3`margin: 0;`
+const AssignmentDescription = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.muted};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
 const Metadata = styled.div`
   display: flex;
   align-items: center;
@@ -57,14 +70,16 @@ const Metadata = styled.div`
   font-size: 0.85rem;
 `
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
-const statusTone = { active: 'info', cancelled: 'neutral' }
+const statusTone = { active: 'success', cancelled: 'neutral' }
 
 const getAssignments = (data) => data?.assignments || data?.items || []
 
 const formatDate = (value) => {
   if (!value) return 'No expiry'
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'No expiry' : `Expires ${date.toLocaleString()}`
+  return Number.isNaN(date.getTime())
+    ? 'No expiry'
+    : `Expires ${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
 }
 
 export function AssignmentManagementPage() {
@@ -133,12 +148,16 @@ export function AssignmentManagementPage() {
             return (
               <AssignmentCard key={assignment._id || assignment.id}>
                 <AssignmentContent>
-                  <AssignmentTitle>{assessment.title || assignment.assessmentTitle || 'Untitled assessment'}</AssignmentTitle>
-                  <Metadata>
+                  <AssignmentTitleRow>
+                    <AssignmentTitle>{assessment.title || assignment.assessmentTitle || 'Untitled assessment'}</AssignmentTitle>
                     <Pill tone={statusTone[assignment.status] || 'neutral'}>{assignment.status || 'active'}</Pill>
-                    <span>{assignment.durationMinutes || 0} minutes</span>
-                    <span>{formatDate(assignment.expiresAt)}</span>
-                    <span>Score: {assignment.score ?? totalPoints}</span>
+                  </AssignmentTitleRow>
+                  {assignment.description && <AssignmentDescription>{assignment.description}</AssignmentDescription>}
+                  <Metadata>
+                    <Pill tone="neutral">{assignment.studentCount ?? 0} students</Pill>
+                    <Pill tone="neutral">{assignment.durationMinutes || 0} minutes</Pill>
+                    <Pill tone="neutral">{formatDate(assignment.expiresAt)}</Pill>
+                    <Pill tone="neutral">Score: {assignment.score ?? totalPoints}</Pill>
                   </Metadata>
                 </AssignmentContent>
                 <CardActions>
