@@ -8,7 +8,6 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
-import { DropDown } from '../../../components/ui/DropDown'
 
 const Header = styled.div`
   margin-bottom: 20px;
@@ -63,6 +62,40 @@ const Metadata = styled.div`
   font-size: 0.85rem;
 `
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
+const TabList = styled.div`
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+`
+const Tab = styled.button`
+  flex: 1;
+  padding: 16px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: ${({ theme, $active }) => $active ? theme.colors.primary : theme.colors.muted};
+  border-bottom: 3px solid ${({ theme, $active }) => $active ? theme.colors.primary : 'transparent'};
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.background};
+  }
+
+  @media (max-width: 640px) {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+`
+const TabCount = styled.span`
+  margin-left: 8px;
+  font-size: 0.85rem;
+  opacity: 0.7;
+`
 
 const statusTone = {
   assigned: 'neutral',
@@ -75,6 +108,12 @@ const statusLabel = {
   in_progress: 'In progress',
   submitted: 'Submitted',
 }
+
+const TAB_FILTERS = [
+  { id: 'new', label: 'New', statuses: ['assigned'] },
+  { id: 'resume', label: 'Resume', statuses: ['in_progress'] },
+  { id: 'completed', label: 'Completed', statuses: ['submitted'] },
+]
 
 const formatDate = (value) => {
   if (!value) return 'No expiry'
@@ -94,21 +133,40 @@ const actionLabel = (assessment) => {
 export function CandidateDashboardPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('all')
+  const [activeTab, setActiveTab] = useState('new')
   const query = useQuery({
     queryKey: attemptKeys.all,
     queryFn: listMyAssessments,
   })
 
+  const tabConfig = useMemo(() => {
+    const config = {}
+    TAB_FILTERS.forEach((tab) => {
+      config[tab.id] = tab
+    })
+    return config
+  }, [])
+
   const assessments = useMemo(() => {
     const list = query.data || []
     const normalizedSearch = search.trim().toLowerCase()
+    const activeTabStatuses = tabConfig[activeTab]?.statuses || []
+
     return list.filter((assessment) => {
-      if (status !== 'all' && assessment.status !== status) return false
+      if (!activeTabStatuses.includes(assessment.status)) return false
       if (!normalizedSearch) return true
       return (assessment.title || '').toLowerCase().includes(normalizedSearch)
     })
-  }, [query.data, search, status])
+  }, [query.data, search, activeTab, tabConfig])
+
+  const tabCounts = useMemo(() => {
+    const list = query.data || []
+    const counts = {}
+    TAB_FILTERS.forEach((tab) => {
+      counts[tab.id] = list.filter((a) => tab.statuses.includes(a.status)).length
+    })
+    return counts
+  }, [query.data])
 
   const handleOpen = (assessment) => {
     if (!assessment.accessible) return
@@ -117,29 +175,27 @@ export function CandidateDashboardPage() {
 
   return (
     <DashboardLayout title="Candidate workspace" role="Candidate">
-      <Header>
-        <h2>Assigned assessments</h2>
-        <Muted>Start, resume, or review your assigned assessments below.</Muted>
-      </Header>
       <Card>
+        <TabList role="tablist">
+          {TAB_FILTERS.map((tab) => (
+            <Tab
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              $active={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              <TabCount>({tabCounts[tab.id] || 0})</TabCount>
+            </Tab>
+          ))}
+        </TabList>
         <Toolbar>
           <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <DropDown
-            id="assessment-status-filter"
-            aria-label="Filter assessments by status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            options={[
-              { value: 'all', label: 'All statuses' },
-              { value: 'assigned', label: 'Not started' },
-              { value: 'in_progress', label: 'In progress' },
-              { value: 'submitted', label: 'Submitted' },
-            ]}
-          />
         </Toolbar>
         {query.isLoading && <CommonLoader label="Loading assessments..." />}
         {query.isError && <EmptyState role="alert">{query.error.message}</EmptyState>}
-        {!query.isLoading && !query.isError && !assessments.length && <EmptyState>No assessments match your filters.</EmptyState>}
+        {!query.isLoading && !query.isError && !assessments.length && <EmptyState>No assessments in this tab.</EmptyState>}
         <AssessmentList>
           {assessments.map((assessment) => (
             <AssessmentCard key={assessment.attemptId}>

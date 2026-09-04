@@ -83,7 +83,7 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
           <h1>{title}</h1>
         </PageHeading>
           <Navigation aria-label="Workspace navigation">
-          {role === 'Administrator' ? (
+          {role === 'Administrator' && (
             <>
               <NavigationLink to="/admin" end>Dashboard</NavigationLink>
               <NavigationLink to="/admin/candidates">Candidates</NavigationLink>
@@ -91,12 +91,8 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
               <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
               <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
             </>
-          ) : (
-            <>
-              <NavigationLink to="/candidate">Assigned assessments</NavigationLink>
-              <NavigationLink to="/candidate/assessments/demo">Demo attempt</NavigationLink>
-            </>
-        )}
+          )
+        }
         </Navigation>
         </>
           )}
