@@ -85,6 +85,7 @@ export function DashboardLayout({ title, role, children }) {
           <>
             <NavigationLink to="/admin" end>Dashboard</NavigationLink>
             <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
+            <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
             <NavigationLink to="/admin/questions">Questions</NavigationLink>
           </>
         ) : (

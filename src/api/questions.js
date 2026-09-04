@@ -8,7 +8,7 @@ export const questionKeys = {
 export async function listQuestions({ page = 1, limit = 25, search = '' } = {}) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
   if (search) params.set('search', search)
-  const response = await apiRequest(`/questions?${params.toString()}`)
+  const response = await apiRequest(`/admin/questions?${params.toString()}`)
   const data = response.data
   if (Array.isArray(data)) return { items: data, total: data.length, totalPages: 1 }
   return {
@@ -19,12 +19,12 @@ export async function listQuestions({ page = 1, limit = 25, search = '' } = {}) 
 }
 
 export async function getQuestion(id) {
-  const response = await apiRequest(`/questions/${id}`)
+  const response = await apiRequest(`/admin/questions/${id}`)
   return response.data
 }
 
 export async function createQuestion(question) {
-  const response = await apiRequest('/questions', {
+  const response = await apiRequest('/admin/questions', {
     method: 'POST',
     body: JSON.stringify(question),
   })
@@ -32,7 +32,7 @@ export async function createQuestion(question) {
 }
 
 export async function updateQuestion({ id, ...question }) {
-  const response = await apiRequest(`/questions/${id}`, {
+  const response = await apiRequest(`/admin/questions/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(question),
   })
