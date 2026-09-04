@@ -29,10 +29,8 @@ export function QuestionTable({ questions, onEdit, onDelete }) {
       {questions.map((question) => (
         <QuestionCard key={question.id}>
           <QuestionContent>
-            <div>
               <QuestionId>QP-{question.qp_number}</QuestionId>
               <QuestionText>{question.questionText}</QuestionText>
-            </div>
             <QuestionMetadata>
               <Pill tone={getTone(question.type)}>{formatLabel(question.type)}</Pill>
               <Pill tone={getTone(question.difficulty)}>{formatLabel(question.difficulty)}</Pill>

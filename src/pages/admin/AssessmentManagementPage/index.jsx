@@ -57,7 +57,7 @@ const AssessmentCard = styled.article`
   padding: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
-  @media (max-width: 640px) { align-items: flex-start; flex-direction: column; }
+  @media (max-width: 640px) { align-items: flex-start; }
 `
 const AssessmentTitle = styled.h3`margin: 0 0 8px;`
 const CardActions = styled.div`position: relative; display: flex; align-items: center; gap: 12px;`
@@ -142,7 +142,6 @@ export function AssessmentManagementPage() {
                 </Metadata>
               </div>
               <CardActions>
-               <Pill tone="info">Assessment</Pill>
                <Menu trigger="⋮" items={getMenuItems(assessment)} />
               </CardActions>
             </AssessmentCard>

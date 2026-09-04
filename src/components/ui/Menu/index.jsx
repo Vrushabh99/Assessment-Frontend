@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MenuContainer, MenuButton, MenuDropdown, MenuItem, MenuDivider } from './styles'
 
 /* eslint-disable react/prop-types */
@@ -10,6 +10,19 @@ export function Menu({ trigger, items, icon, disabled }) {
     item.onClick?.()
     setIsOpen(false)
   }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
 
   return (
     <MenuContainer ref={menuRef}>

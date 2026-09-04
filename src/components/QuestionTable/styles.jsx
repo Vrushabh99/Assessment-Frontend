@@ -16,7 +16,6 @@ export const QuestionCard = styled.article`
   border-radius: 12px;
   @media (max-width: 640px) {
     align-items: flex-start;
-    flex-direction: column;
   }
 `
 
@@ -27,7 +26,7 @@ export const QuestionContent = styled.div`
   flex: 1;
 `
 
-export const QuestionId = styled.span`
+export const QuestionId = styled.div`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.muted};
   font-family: monospace;
@@ -55,11 +54,6 @@ export const CardActions = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
-  @media (max-width: 640px) {
-    width: 100%;
-    justify-content: flex-end;
-  }
 `
 
 export const EmptyState = styled.p`

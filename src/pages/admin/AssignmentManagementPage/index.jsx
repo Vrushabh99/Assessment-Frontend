@@ -42,7 +42,7 @@ const AssignmentCard = styled.article`
   padding: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
-  @media (max-width: 640px) { align-items: flex-start; flex-direction: column; }
+  @media (max-width: 640px) { align-items: flex-start; }
 `
 const AssignmentContent = styled.div`display: grid; gap: 10px; min-width: 0;`
 const CardActions = styled.div`display: flex; align-items: center; gap: 8px;`
