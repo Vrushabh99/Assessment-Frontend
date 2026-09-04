@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { IconButton, Menu, MenuItem, Pagination } from '@mui/material'
 import styled from 'styled-components'
 import { candidateKeys, deleteCandidate, listCandidates } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
+import { Menu } from '../../../components/ui/Menu'
+import { Pagination } from '../../../components/ui/Pagination'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { TextField } from '../../../components/ui/TextField'
 
@@ -45,8 +45,6 @@ export function CandidateManagementPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [actionAnchor, setActionAnchor] = useState(null)
-  const [activeCandidate, setActiveCandidate] = useState(null)
   const candidatesQuery = useQuery({
     queryKey: [...candidateKeys.all, { search, page }],
     queryFn: () => listCandidates({ search, page }),
@@ -60,19 +58,15 @@ export function CandidateManagementPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
   })
 
-  const openActions = (event, candidate) => {
-    setActionAnchor(event.currentTarget)
-    setActiveCandidate(candidate)
+  const handleDelete = async (candidateId) => {
+    await deleteMutation.mutateAsync(candidateId)
   }
-  const closeActions = () => {
-    setActionAnchor(null)
-    setActiveCandidate(null)
-  }
-  const handleDelete = async () => {
-    if (!activeCandidate) return
-    await deleteMutation.mutateAsync(activeCandidate._id)
-    closeActions()
-  }
+
+  const getMenuItems = (candidate) => [
+    { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/candidates/${candidate._id}/edit`) },
+    { isDivider: true },
+    { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(candidate._id) },
+  ]
 
   return (
     <DashboardLayout title="Manage candidates" role="Administrator">
@@ -103,40 +97,19 @@ export function CandidateManagementPage() {
                 <CandidateName>{candidate.firstName} {candidate.lastName}</CandidateName>
                 <Muted>{candidate.email}</Muted>
               </div>
-              <IconButton
-                aria-label={`Actions for ${candidate.firstName} ${candidate.lastName}`}
-                aria-controls={activeCandidate?._id === candidate._id ? 'candidate-actions' : undefined}
-                aria-haspopup="true"
-                onClick={(event) => openActions(event, candidate)}
-              >
-                <MoreVertIcon />
-              </IconButton>
+              <Menu trigger="⋮" items={getMenuItems(candidate)} />
             </CandidateCard>
           ))}
         </CandidateList>
-        {totalPages > 1 && (
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(_, nextPage) => setPage(nextPage)}
-            sx={{ display: 'flex', justifyContent: 'center', py: 2 }}
-          />
-        )}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          onPageChange={setPage}
+          itemLabel={`candidate${total === 1 ? '' : 's'}`}
+        />
       </Card>
       <Muted>{total} candidate{total === 1 ? '' : 's'}</Muted>
-      <Menu
-        id="candidate-actions"
-        anchorEl={actionAnchor}
-        open={Boolean(actionAnchor)}
-        onClose={closeActions}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MenuItem onClick={() => { closeActions(); navigate(`/admin/candidates/${activeCandidate?._id}/edit`) }}>Edit</MenuItem>
-        <MenuItem onClick={handleDelete} disabled={deleteMutation.isPending} sx={{ color: 'error.main' }}>
-          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-        </MenuItem>
-      </Menu>
     </DashboardLayout>
   )
 }

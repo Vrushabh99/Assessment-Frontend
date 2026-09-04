@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { IconButton, Menu, MenuItem } from '@mui/material'
 import styled from 'styled-components'
 import { assignmentKeys, deleteAssignment, listAssignments } from '../../../api/assignments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
+import { Menu } from '../../../components/ui/Menu'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
@@ -87,8 +86,6 @@ export function AssignmentManagementPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
-  const [actionAnchor, setActionAnchor] = useState(null)
-  const [activeAssignment, setActiveAssignment] = useState(null)
   const query = useQuery({
     queryKey: [...assignmentKeys.all, { search, status }],
     queryFn: () => listAssignments({ status: status === 'all' ? '' : status }),
@@ -111,18 +108,24 @@ export function AssignmentManagementPage() {
     active: assignments.filter((item) => item.status === 'active').length,
     submitted: assignments.filter((item) => item.status === 'cancelled').length,
   }), [assignments])
-  const closeActions = () => {
-    setActionAnchor(null)
-    setActiveAssignment(null)
-  }
+
   const getAssessmentId = (assignment) => {
     const assessment = assignment?.assessmentId || assignment?.assessment
     return assessment?._id || assessment?.id || assignment?.assessmentId
   }
-  const handleDelete = async () => {
-    if (!activeAssignment) return
-    await deleteMutation.mutateAsync(activeAssignment._id || activeAssignment.id)
-    closeActions()
+
+  const handleDelete = async (assignmentId) => {
+    await deleteMutation.mutateAsync(assignmentId)
+  }
+
+  const getMenuItems = (assignment) => {
+    const assessmentId = getAssessmentId(assignment)
+    return [
+      { id: 'view', label: 'View', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
+      { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}/edit`) },
+      { isDivider: true },
+      { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assignment._id || assignment.id) },
+    ]
   }
 
   return (
@@ -161,13 +164,7 @@ export function AssignmentManagementPage() {
                   </Metadata>
                 </AssignmentContent>
                 <CardActions>
-                  <IconButton
-                    size="small"
-                    aria-label={`Actions for ${assessment.title || 'assignment'}`}
-                    onClick={(event) => { setActionAnchor(event.currentTarget); setActiveAssignment(assignment) }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
+                  <Menu trigger="⋮" items={getMenuItems(assignment)} />
                 </CardActions>
               </AssignmentCard>
             )
@@ -175,19 +172,6 @@ export function AssignmentManagementPage() {
         </AssignmentList>
       </Card>
       <Muted>{counts.total} total • {counts.active} active • {counts.submitted} submitted</Muted>
-      <Menu
-        anchorEl={actionAnchor}
-        open={Boolean(actionAnchor)}
-        onClose={closeActions}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MenuItem onClick={() => { const id = getAssessmentId(activeAssignment); closeActions(); if (id) navigate(`/admin/assessments/${id}`) }}>View</MenuItem>
-        <MenuItem onClick={() => { closeActions(); navigate(`/admin/assignments/${activeAssignment?._id || activeAssignment?.id}/edit`) }}>Edit</MenuItem>
-        <MenuItem onClick={handleDelete} disabled={deleteMutation.isPending} sx={{ color: 'error.main' }}>
-          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-        </MenuItem>
-      </Menu>
     </DashboardLayout>
   )
 }

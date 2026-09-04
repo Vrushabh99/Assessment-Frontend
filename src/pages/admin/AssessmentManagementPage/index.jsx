@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { IconButton, Menu, MenuItem } from '@mui/material'
 import styled from 'styled-components'
 import { assessmentKeys, deleteAssessment, listAssessments } from '../../../api/assessments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
+import { Menu } from '../../../components/ui/Menu'
+import { Pagination } from '../../../components/ui/Pagination'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
@@ -78,11 +78,11 @@ export function AssessmentManagementPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
-  const [actionAnchor, setActionAnchor] = useState(null)
-  const [activeAssessment, setActiveAssessment] = useState(null)
+  const [page, setPage] = useState(1)
+  const limit = 20
   const assessmentsQuery = useQuery({
-    queryKey: [...assessmentKeys.all, { search, status }],
-    queryFn: () => listAssessments({ page: 1, limit: 20, search, status: status === 'all' ? '' : status }),
+    queryKey: [...assessmentKeys.all, { search, status, page, limit }],
+    queryFn: () => listAssessments({ page, limit, search, status: status === 'all' ? '' : status }),
   })
   const assessments = useMemo(() => assessmentsQuery.data?.assessments || [], [assessmentsQuery.data])
   const deleteMutation = useMutation({
@@ -90,24 +90,22 @@ export function AssessmentManagementPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
   })
   const counts = useMemo(() => ({
-    total: assessments.length,
+    total: assessmentsQuery.data?.total || assessments.length,
     published: assessments.filter(({ status: itemStatus }) => itemStatus === 'published').length,
     points: assessments.reduce((total, assessment) => total + Number(assessment.totalPoints || 0), 0),
-  }), [assessments])
+  }), [assessments, assessmentsQuery.data])
 
-  const openActions = (event, assessment) => {
-    setActionAnchor(event.currentTarget)
-    setActiveAssessment(assessment)
+  const handleDelete = async (assessmentId) => {
+    await deleteMutation.mutateAsync(assessmentId)
   }
-  const closeActions = () => {
-    setActionAnchor(null)
-    setActiveAssessment(null)
-  }
-  const handleDelete = async () => {
-    if (!activeAssessment) return
-    await deleteMutation.mutateAsync(activeAssessment._id)
-    closeActions()
-  }
+
+  const getMenuItems = (assessment) => [
+    { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assessments/${assessment._id}/edit`) },
+    { id: 'view', label: 'View', onClick: () => navigate(`/admin/assessments/${assessment._id}`) },
+    { id: 'assign', label: 'Assign', disabled: assessment.status !== 'published', onClick: () => navigate(`/admin/assessments/${assessment._id}/assign`) },
+    { isDivider: true },
+    { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id) },
+  ]
 
   return (
     <DashboardLayout title="Manage assessments" role="Administrator">
@@ -144,41 +142,20 @@ export function AssessmentManagementPage() {
                 </Metadata>
               </div>
               <CardActions>
-                <Pill tone="info">Assessment</Pill>
-                <IconButton
-                  aria-label={`Actions for ${assessment.title}`}
-                  aria-controls={activeAssessment?._id === assessment._id ? 'assessment-actions' : undefined}
-                  aria-haspopup="true"
-                  onClick={(event) => openActions(event, assessment)}
-                  size="small"
-                >
-                  <MoreVertIcon />
-                </IconButton>
+               <Pill tone="info">Assessment</Pill>
+               <Menu trigger="⋮" items={getMenuItems(assessment)} />
               </CardActions>
             </AssessmentCard>
           ))}
         </AssessmentList>
+        <Pagination
+          currentPage={page}
+          totalPages={assessmentsQuery.data?.totalPages || 1}
+          totalItems={counts.total}
+          onPageChange={setPage}
+          itemLabel="assessments"
+        />
       </Card>
-      <Menu
-        id="assessment-actions"
-        anchorEl={actionAnchor}
-        open={Boolean(actionAnchor)}
-        onClose={closeActions}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MenuItem onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}/edit`) }}>Edit</MenuItem>
-        <MenuItem onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}`) }}>View</MenuItem>
-        <MenuItem
-          onClick={() => { closeActions(); navigate(`/admin/assessments/${activeAssessment?._id}/assign`) }}
-          disabled={activeAssessment?.status !== 'published'}
-        >
-          Assign
-        </MenuItem>
-        <MenuItem onClick={handleDelete} disabled={deleteMutation.isPending} sx={{ color: 'error.main' }}>
-          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-        </MenuItem>
-      </Menu>
     </DashboardLayout>
   )
 }
