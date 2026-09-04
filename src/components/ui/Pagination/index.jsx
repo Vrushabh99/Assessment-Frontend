@@ -1,71 +1,80 @@
-import { PaginationWrapper, PaginationControls, PageButton, PageInfo } from './styles'
+import { useState } from 'react'
+import { PaginationWrapper, PaginationInfo, PaginationControls, PageButton, PageInputWrapper, PageInput, PageSeparator } from './styles'
 
 /* eslint-disable react/prop-types */
 export function Pagination({ currentPage, totalPages, totalItems, onPageChange, itemLabel = 'items' }) {
+  const [inputValue, setInputValue] = useState(String(currentPage))
+
   if (totalPages <= 1) return null
 
-  const getPageRange = () => {
-    const delta = 2
-    const range = []
-    const left = Math.max(1, currentPage - delta)
-    const right = Math.min(totalPages, currentPage + delta)
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value)
+  }
 
-    if (left > 1) {
-      range.push(1)
-      if (left > 2) range.push('...')
+  const handleInputSubmit = () => {
+    const pageNum = parseInt(inputValue, 10)
+    if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+      onPageChange(pageNum)
+      setInputValue(String(pageNum))
+    } else {
+      setInputValue(String(currentPage))
     }
+  }
 
-    for (let i = left; i <= right; i++) {
-      range.push(i)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleInputSubmit()
+    } else if (e.key === 'Escape') {
+      setInputValue(String(currentPage))
     }
+  }
 
-    if (right < totalPages) {
-      if (right < totalPages - 1) range.push('...')
-      range.push(totalPages)
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1)
+      setInputValue(String(currentPage - 1))
     }
+  }
 
-    return range
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1)
+      setInputValue(String(currentPage + 1))
+    }
   }
 
   return (
     <PaginationWrapper>
-      <PageInfo>
-        Page {currentPage} of {totalPages}
-        {totalItems && ` • ${totalItems} ${itemLabel}`}
-      </PageInfo>
+      <PaginationInfo>
+        {totalItems && `${totalItems} ${itemLabel}`}
+      </PaginationInfo>
       <PaginationControls>
         <PageButton
           disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
+          onClick={handlePrevious}
           aria-label="Previous page"
         >
           ← Prev
         </PageButton>
 
-        {getPageRange().map((page, index) => {
-          if (page === '...') {
-            return (
-              <span key={`ellipsis-${index}`} style={{ opacity: 0.5 }}>
-                ...
-              </span>
-            )
-          }
-          return (
-            <PageButton
-              key={page}
-              $active={page === currentPage}
-              onClick={() => onPageChange(page)}
-              aria-label={`Go to page ${page}`}
-              aria-current={page === currentPage ? 'page' : undefined}
-            >
-              {page}
-            </PageButton>
-          )
-        })}
+        <PageInputWrapper>
+          <PageInput
+            type="number"
+            min="1"
+            max={totalPages}
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleInputSubmit}
+            onKeyDown={handleKeyDown}
+            aria-label="Go to page"
+          />
+          <PageSeparator>/</PageSeparator>
+          <span>{totalPages}</span>
+        </PageInputWrapper>
 
         <PageButton
           disabled={currentPage === totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
+          onClick={handleNext}
           aria-label="Next page"
         >
           Next →
