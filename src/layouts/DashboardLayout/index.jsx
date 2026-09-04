@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { theme } from '../../styles/theme'
 import { Brand, Container, Content, Dashboard, Eyebrow, Navigation, NavigationLink, PageHeading, Topbar, UserInfo, UserMenu } from './styles'
 
-export function DashboardLayout({ title, role, children }) {
+export function DashboardLayout({ title, role, hideNavigation, children }) {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const [profileAnchor, setProfileAnchor] = useState(null)
@@ -76,26 +76,30 @@ export function DashboardLayout({ title, role, children }) {
             </Menu>
           </UserMenu>
         </Topbar>
+        {!hideNavigation && (
+          <>
         <PageHeading>
           <Eyebrow>{role} workspace</Eyebrow>
           <h1>{title}</h1>
         </PageHeading>
-        <Navigation aria-label="Workspace navigation">
-        {role === 'Administrator' ? (
-          <>
-            <NavigationLink to="/admin" end>Dashboard</NavigationLink>
-            <NavigationLink to="/admin/candidates">Candidates</NavigationLink>
-            <NavigationLink to="/admin/questions">Questions</NavigationLink>
-            <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
-            <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
-          </>
-        ) : (
-          <>
-            <NavigationLink to="/candidate">Assigned assessments</NavigationLink>
-            <NavigationLink to="/candidate/assessments/demo">Demo attempt</NavigationLink>
-          </>
+          <Navigation aria-label="Workspace navigation">
+          {role === 'Administrator' ? (
+            <>
+              <NavigationLink to="/admin" end>Dashboard</NavigationLink>
+              <NavigationLink to="/admin/candidates">Candidates</NavigationLink>
+              <NavigationLink to="/admin/questions">Questions</NavigationLink>
+              <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
+              <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
+            </>
+          ) : (
+            <>
+              <NavigationLink to="/candidate">Assigned assessments</NavigationLink>
+              <NavigationLink to="/candidate/assessments/demo">Demo attempt</NavigationLink>
+            </>
         )}
         </Navigation>
+        </>
+          )}
         <Content>{children}</Content>
       </Container>
     </Dashboard>

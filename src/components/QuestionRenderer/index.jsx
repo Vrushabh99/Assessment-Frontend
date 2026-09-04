@@ -7,7 +7,7 @@ const getInfo = (question) => question.additionalInfo || {}
 const getOptions = (question) => getInfo(question).options || []
 const getCorrectAnswers = (question) => getInfo(question).correctAnswers || []
 const isTeacherMode = (mode) => mode === QUESTION_RENDERER_MODES.TEACHER
-const isReadOnly = (mode) => isTeacherMode(mode)
+const isReadOnly = (mode) => isTeacherMode(mode) || mode === QUESTION_RENDERER_MODES.PREVIEW
 
 function isSelected(answer, index) {
   return Array.isArray(answer) ? answer.includes(index) : answer === index

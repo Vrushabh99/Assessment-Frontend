@@ -1,79 +1,126 @@
-import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { useParams } from 'react-router-dom'
-import styled from 'styled-components'
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getAssessment, assessmentKeys } from '../../../api/assessments'
+import { candidateAssessmentKeys, getCandidateAssessment } from '../../../api/attempts'
+import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
-import { QuestionRenderer } from '../../../components/QuestionRenderer'
-import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
+import { Pill } from '../../../components/ui/Pill'
+import { Button } from '../../../components/ui/Button'
+import { Card, TitleRow, Title, Muted, Metadata, RulesList, Actions, ErrorState } from './styles'
 
-const Card = styled.section`
-  padding: 24px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-`
-const QuestionList = styled.div`display: grid; gap: 16px;`
+const statusTone = {
+  assigned: 'neutral',
+  in_progress: 'warning',
+  submitted: 'success',
+}
 
-const demoQuestions = [
-  {
-    id: 'demo-single',
-    questionText: 'Which HTTP method is typically used to create a resource?',
-    type: 'single-choice',
-    points: 1,
-    additionalInfo: { options: ['GET', 'POST', 'DELETE'], correctAnswers: [1] },
-  },
-  {
-    id: 'demo-multiple',
-    questionText: 'Which are frontend technologies?',
-    type: 'multiple-choice',
-    points: 2,
-    additionalInfo: { options: ['React', 'MongoDB', 'CSS'], correctAnswers: [0, 2] },
-  },
-  {
-    id: 'demo-short',
-    questionText: 'In one sentence, what does JWT stand for?',
-    type: 'short-answer',
-    points: 1,
-    additionalInfo: { expectedAnswer: 'JSON Web Token' },
-  },
-]
+const statusLabel = {
+  assigned: 'Not started',
+  in_progress: 'In progress',
+  submitted: 'Submitted',
+}
+
+const formatDate = (value) => {
+  if (!value) return 'No expiry'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'No expiry'
+    : `Expires ${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
+}
+
+const violationLabels = {
+  tab_switch: 'Tab switch',
+  window_blur: 'Window blur',
+  fullscreen_exit: 'Fullscreen exit',
+  copy: 'Copy',
+  paste: 'Paste',
+  right_click: 'Right-click',
+}
+
+const actionLabel = (status) => {
+  if (status === 'submitted') return 'View result'
+  if (status === 'in_progress') return 'Resume assessment'
+  return 'Start assessment'
+}
 
 export function AssessmentAttemptPage() {
-  const { assessmentId } = useParams()
-  const isDemo = assessmentId === 'demo'
+  const { assessmentId, assignmentId } = useParams()
   const query = useQuery({
-    queryKey: assessmentKeys.detail(assessmentId),
-    queryFn: () => getAssessment(assessmentId),
-    enabled: !isDemo,
+    queryKey: candidateAssessmentKeys.detail(assessmentId, assignmentId),
+    queryFn: () => getCandidateAssessment({ assessmentId, assignmentId }),
   })
-  const assessment = isDemo ? { title: 'Demo assessment', questionIds: demoQuestions } : query.data
-  const [answers, setAnswers] = useState({})
+
+  const data = query.data
+  const attempt = data?.attempt
+  const assignment = data?.assignment
+  const assessment = data?.assessment
+
+  const isCancelled = assignment?.status === 'cancelled'
+  const isExpired = assignment?.expiresAt ? new Date(assignment.expiresAt) < new Date() : false
+  const blocked = attempt?.status !== 'submitted' && (isCancelled || isExpired)
+
+  const handleAction = () => {
+    if (blocked) return
+    const attemptUrl = `/candidate/assessments/${assessmentId}/assignments/${assignmentId}/attempt`
+    const newWindow = window.open(attemptUrl, 'assessment_attempt', 'width=1200,height=800')
+    if (newWindow) {
+      newWindow.addEventListener('load', () => {
+        if (newWindow.document.documentElement.requestFullscreen) {
+          newWindow.document.documentElement.requestFullscreen()
+        }
+      })
+    }
+  }
 
   return (
-    <DashboardLayout title="Assessment attempt" role="Candidate">
-      <Card>
-        {query.isLoading && <CommonLoader label="Loading assessment..." />}
-        {query.isError && <p role="alert">{query.error.message}</p>}
-        {assessment && (
-          <>
-            <h2>{assessment.title}</h2>
-            <p>Answer each question below. Your answers are kept locally for this demo.</p>
-            <QuestionList>
-              {assessment.questionIds.map((question) => (
-                <QuestionRenderer
-                  key={question.id || question._id}
-                  question={question}
-                  mode={isDemo ? QUESTION_RENDERER_MODES.DEMO : QUESTION_RENDERER_MODES.ASSESSMENT}
-                  answer={answers[question.id || question._id]}
-                  onAnswer={(answer) => setAnswers((current) => ({ ...current, [question.id || question._id]: answer }))}
-                />
+    <DashboardLayout title="Assessment attempt" role="Candidate" hideNavigation>
+      {query.isLoading && <CommonLoader label="Loading assessment..." />}
+      {query.isError && <ErrorState role="alert">{query.error.message}</ErrorState>}
+      {data && (
+        <Card>
+          <div>
+            <TitleRow>
+              <Title>{assessment.title}</Title>
+              <Pill tone={statusTone[attempt.status] || 'neutral'}>{statusLabel[attempt.status] || attempt.status}</Pill>
+              {isCancelled && <Pill tone="warning">Cancelled</Pill>}
+              {!isCancelled && isExpired && attempt.status !== 'submitted' && <Pill tone="warning">Expired</Pill>}
+            </TitleRow>
+            {assignment.description && <Muted>{assignment.description}</Muted>}
+          </div>
+
+          <Metadata>
+            <Pill tone="neutral">{assessment.questions.length} questions</Pill>
+            <Pill tone="neutral">{assignment.durationMinutes} minutes</Pill>
+            <Pill tone="neutral">{assessment.totalPoints} points</Pill>
+            <Pill tone="neutral">{formatDate(assignment.expiresAt)}</Pill>
+            {attempt.status === 'submitted' && <Pill tone="success">Submitted</Pill>}
+          </Metadata>
+
+          <div>
+            <h3>Proctoring rules</h3>
+            <Muted>This assessment is monitored. The following actions are tracked and may be limited:</Muted>
+            <RulesList>
+              {Object.entries(violationLabels).map(([key, label]) => (
+                <li key={key}>
+                  {label}
+                  {assignment.violationLimits?.[key] !== undefined && ` — limit: ${assignment.violationLimits[key]}`}
+                </li>
               ))}
-            </QuestionList>
-          </>
-        )}
-      </Card>
+            </RulesList>
+          </div>
+
+          {blocked && (
+            <ErrorState role="alert">
+              {isCancelled ? 'This assignment has been cancelled and can no longer be attempted.' : 'This assignment has expired and can no longer be attempted.'}
+            </ErrorState>
+          )}
+
+          <Actions>
+            <Button type="button" disabled={blocked} onClick={handleAction}>
+              {actionLabel(attempt.status)}
+            </Button>
+          </Actions>
+        </Card>
+      )}
     </DashboardLayout>
   )
 }

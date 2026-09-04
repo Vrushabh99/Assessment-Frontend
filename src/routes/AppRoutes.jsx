@@ -13,6 +13,7 @@ import { QuestionsDashboardPage } from '../pages/admin/QuestionsDashboardPage'
 import { QuestionEditorPage } from '../pages/admin/QuestionEditorPage'
 import { CandidateDashboardPage } from '../pages/candidate/CandidateDashboardPage'
 import { AssessmentAttemptPage } from '../pages/candidate/AssessmentAttemptPage'
+import { AttemptTakingPage } from '../pages/candidate/AttemptTakingPage'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { AuthProvider } from '../context/AuthContext'
 
@@ -83,8 +84,12 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><CandidateDashboardPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assessments/:assessmentId"
+          path="/candidate/assessments/:assessmentId/assignments/:assignmentId"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AssessmentAttemptPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/candidate/assessments/:assessmentId/assignments/:assignmentId/attempt"
+          element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AttemptTakingPage /></ProtectedRoute>}
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

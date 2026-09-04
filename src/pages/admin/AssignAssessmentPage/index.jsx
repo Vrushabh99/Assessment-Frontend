@@ -142,21 +142,41 @@ export function AssignAssessmentPage() {
         const candidate = student.candidate || student.candidateId
         return candidate?._id || candidate?.id || candidate
       }))
-      const response = isEdit
-        ? await updateAssignment({ id: assignmentId, ...payload }).then(async (result) => {
-          const newCandidates = selectedCandidates.filter((candidate) => !existingIds.has(candidate._id || candidate.id))
-          if (!newCandidates.length) return { data: result }
-          return assignAssessment({
+
+      const newCandidates = selectedCandidates.filter((candidate) => !existingIds.has(candidate._id || candidate.id))
+
+      // Check if assignment properties actually changed
+      const hasPropertyChanges = assignment && (
+        assignment.durationMinutes !== duration ||
+        assignment.expiresAt !== payload.expiresAt ||
+        assignment.description !== (description || undefined) ||
+        JSON.stringify(assignment.violationLimits) !== JSON.stringify(violationLimits)
+      )
+
+      let response
+      if (isEdit) {
+        // Only call updateAssignment if properties actually changed
+        if (hasPropertyChanges) {
+          response = await updateAssignment({ id: assignmentId, ...payload })
+        } else {
+          response = { data: assignment }
+        }
+
+        // Add new candidates if any
+        if (newCandidates.length > 0) {
+          response = await assignAssessment({
             assessmentId: assignedAssessment?._id || assignedAssessment?.id || assignedAssessment,
             assignmentId,
             ...payload,
             candidateIds: newCandidates.map((candidate) => candidate._id || candidate.id),
           })
-        })
-        : await apiRequest(`/admin/assessments/${assessmentId}/assign`, {
+        }
+      } else {
+        response = await apiRequest(`/admin/assessments/${assessmentId}/assign`, {
           method: 'POST',
           body: JSON.stringify({ ...payload, candidateIds: selectedCandidates.map((candidate) => candidate._id) }),
         })
+      }
       const result = response.data || {}
       const skipped = result.skipped || {}
       let message = `${result.studentsAssigned || 0} candidate(s) assigned.`
