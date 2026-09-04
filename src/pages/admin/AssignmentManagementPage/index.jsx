@@ -103,6 +103,7 @@ export function AssignmentManagementPage() {
       return title.toLowerCase().includes(normalizedSearch)
     })
   }, [query.data, search])
+
   const counts = useMemo(() => ({
     total: assignments.length,
     active: assignments.filter((item) => item.status === 'active').length,
@@ -121,6 +122,7 @@ export function AssignmentManagementPage() {
   const getMenuItems = (assignment) => {
     const assessmentId = getAssessmentId(assignment)
     return [
+      { id: 'details', label: 'View Details', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}`) },
       { id: 'preview', label: 'Preview', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
       { id: 'view', label: 'View', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
       { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}/edit`) },
