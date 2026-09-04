@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Accordion,
@@ -21,6 +21,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { apiRequest } from '../../../api/client'
 import { assessmentKeys, getAssessment } from '../../../api/assessments'
 import { assignAssessment, assignmentKeys, getAssignment, updateAssignment } from '../../../api/assignments'
+import { candidateKeys, listCandidates } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -56,10 +57,9 @@ export function AssignAssessmentPage() {
     queryFn: () => getAssignment(assignmentId),
     enabled: isEdit,
   })
-  const fetchedCandidates = useRef(false)
-  const [candidateOptions, setCandidateOptions] = useState([])
   const [selectedCandidates, setSelectedCandidates] = useState([])
   const [candidatePage, setCandidatePage] = useState(1)
+  const [candidateSearch, setCandidateSearch] = useState('')
   const [durationHours, setDurationHours] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -67,7 +67,6 @@ export function AssignAssessmentPage() {
   const [violationLimits, setViolationLimits] = useState(defaultViolationLimits)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
-  const [candidateLoading, setCandidateLoading] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [step, setStep] = useState(0)
   const assignmentResponse = assignmentQuery.data
@@ -86,8 +85,13 @@ export function AssignAssessmentPage() {
   const assessment = isEdit
     ? assignedAssessment
     : assessmentQuery.data?.assessment || assessmentQuery.data
+  const candidatesQuery = useQuery({
+    queryKey: [...candidateKeys.all, { search: candidateSearch }],
+    queryFn: () => listCandidates({ search: candidateSearch, limit: 100 }),
+  })
 
   const candidatesPerPage = 8
+  const candidateOptions = normalizeCandidates(candidatesQuery.data)
   const candidatePageCount = Math.max(1, Math.ceil(candidateOptions.length / candidatesPerPage))
   const visibleCandidates = candidateOptions.slice((candidatePage - 1) * candidatesPerPage, candidatePage * candidatesPerPage)
   const totalDurationMinutes = (Number(durationHours || 0) * 60) + Number(durationMinutes || 0)
@@ -101,16 +105,6 @@ export function AssignAssessmentPage() {
     setViolationLimits({ ...defaultViolationLimits, ...assignment.violationLimits })
     setSelectedCandidates(assignmentStudents.map((student) => student.candidate || student.candidateId).filter(Boolean))
   }, [assignment, assignmentStudents, isEdit])
-
-  useEffect(() => {
-    if (fetchedCandidates.current) return
-    fetchedCandidates.current = true
-    setCandidateLoading(true)
-    apiRequest('/admin/candidates')
-      .then((response) => setCandidateOptions(normalizeCandidates(response.data)))
-      .catch((error) => setSnackbar({ open: true, message: error.message, severity: 'error' }))
-      .finally(() => setCandidateLoading(false))
-  }, [])
 
   const validateConfiguration = () => {
     const nextErrors = {}
@@ -237,9 +231,20 @@ export function AssignAssessmentPage() {
             </Stack>
           ) : (
             <Stack spacing={2}>
-              {candidateLoading && <CommonLoader label="Loading candidates..." />}
+              {candidatesQuery.isLoading && <CommonLoader label="Loading candidates..." />}
               <div>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>Candidates</Typography>
+                <TextField
+                  id="assignment-candidate-search"
+                  aria-label="Search candidates"
+                  placeholder="Search candidates by name or email"
+                  value={candidateSearch}
+                  onChange={(event) => {
+                    setCandidateSearch(event.target.value)
+                    setCandidatePage(1)
+                  }}
+                />
+                {candidatesQuery.isError && <Typography color="error" variant="caption">{candidatesQuery.error.message}</Typography>}
                 <Stack sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, px: 1 }}>
                   {visibleCandidates.map((candidate) => (
                     <FormControlLabel
@@ -261,7 +266,7 @@ export function AssignAssessmentPage() {
                       label={`${candidate.firstName || ''} ${candidate.lastName || ''} (${candidate.email || 'No email'})`}
                     />
                   ))}
-                  {!candidateLoading && !visibleCandidates.length && <Typography sx={{ p: 2 }} color="text.secondary">No candidates available.</Typography>}
+                  {!candidatesQuery.isLoading && !visibleCandidates.length && <Typography sx={{ p: 2 }} color="text.secondary">No candidates found.</Typography>}
                 </Stack>
                 {errors.candidates && <Typography color="error" variant="caption">{errors.candidates}</Typography>}
                 {candidatePageCount > 1 && (
