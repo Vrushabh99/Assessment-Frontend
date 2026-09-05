@@ -141,7 +141,7 @@ export function AssignmentManagementPage() {
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="assignment-search" aria-label="Search assignments" placeholder="Search candidates or assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <TextField id="assignment-search" aria-label="Search assignments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
           <DropDown id="assignment-status-filter" aria-label="Filter assignments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'cancelled', label: 'Cancelled' }]} />
         </Toolbar>
         {query.isLoading && <CommonLoader label="Loading assignments..." />}

@@ -199,6 +199,25 @@ const formatDate = (value) => {
     : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })
 }
 
+const StatusPill = ({ submission }) => {
+  const { status, isFullyScored } = submission;
+  let tone;
+  let label;
+  switch(status) {
+    case 'submitted': { tone = 'success'; label = isFullyScored ? 'Graded' : 'Submitted'; break; }
+    case 'assigned' : { tone = 'warning'; label = 'Not Started'; break; }
+    default: tone = 'warning'; label = 'In Progress';
+  }
+ 
+  return(
+    <Pill
+      tone={tone}
+    >
+      {label}
+    </Pill>
+  )
+}
+
 export function AssignmentDetailsPage() {
   const navigate = useNavigate()
   const { assignmentId } = useParams()
@@ -250,7 +269,7 @@ export function AssignmentDetailsPage() {
     )
   }
 
-  const assignment = assignmentQuery.data.assignment;
+  const assignment = assignmentQuery.data;
   const assessment = assignment?.assessmentId || assignment?.assessment || {}
   const displayedCandidates = candidatesQuery.data?.candidates || []
 
@@ -258,15 +277,17 @@ export function AssignmentDetailsPage() {
     {
       id: 'view',
       label: 'View Response',
+      disabled: ['assigned'].includes(candidate.status),
       onClick: () => {
-        navigate(`/admin/submissions/${candidate.submissionId}`)
+        navigate(`/admin/submissions/${assignment._id}/${candidate.id}`)
       },
     },
     {
       id: 'grade',
       label: 'Grade Response',
+      disabled: ['assigned', 'in_progress'].includes(candidate.status),
       onClick: () => {
-        navigate(`/admin/submissions/${candidate.submissionId}/grade`)
+        navigate(`/admin/submissions/${assignment._id}/${candidate.id}/grade`)
       },
     },
   ]
@@ -287,6 +308,12 @@ export function AssignmentDetailsPage() {
               </div>
             </HeaderContent>
             <HeaderActions>
+              <Button
+                variant='primary'
+                onClick={() => navigate('/admin/assignments')}
+              >
+                Back
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => navigate(`/admin/assessments/${assessment._id || assessment.id}`)}
@@ -344,7 +371,7 @@ export function AssignmentDetailsPage() {
               onChange={(e) => {
                 setSearchInput(e.target.value)
               }}
-              style={{ flex: 1, minWidth: 200 }}
+              style={{ flex: 1, minWidth: 300 }}
             />
             <DropDown
               id="submission-status-filter"
@@ -354,7 +381,7 @@ export function AssignmentDetailsPage() {
               }}
               options={[
                 { value: 'all', label: 'All statuses' },
-                { value: 'pending', label: 'Pending' },
+                { value: 'assigned', label: 'Assigned' },
                 { value: 'in_progress', label: 'In Progress' },
                 { value: 'submitted', label: 'Submitted' },
                 { value: 'graded', label: 'Graded' },
@@ -399,9 +426,9 @@ export function AssignmentDetailsPage() {
                           <StudentEmail>{candidate.email}</StudentEmail>
                         </td>
                         <td>
-                          <StatusBadge>
-                            <Pill tone={getStatusTone(candidate.status)}>{candidate.status}</Pill>
-                          </StatusBadge>
+                          <StatusPill
+                            submission={candidate}
+                          />
                         </td>
                         <td>
                           {candidate.isFullyScored && candidate.score !== undefined ? (

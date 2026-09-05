@@ -8,6 +8,7 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
+import { useAuth } from '../../../context/AuthContext'
 
 const Header = styled.div`
   margin-bottom: 20px;
@@ -113,6 +114,7 @@ const TAB_FILTERS = [
   { id: 'new', label: 'New', statuses: ['assigned'] },
   { id: 'resume', label: 'Resume', statuses: ['in_progress'] },
   { id: 'completed', label: 'Completed', statuses: ['submitted'] },
+  { id: 'graded', label: 'Graded', statuses: ['graded'] },
 ]
 
 const formatDate = (value) => {
@@ -124,54 +126,75 @@ const formatDate = (value) => {
 }
 
 const actionLabel = (assessment) => {
-  if (!assessment.accessible) return 'Unavailable'
-  if (assessment.status === 'submitted') return 'View result'
-  if (assessment.status === 'in_progress') return 'Resume'
-  return 'Start'
+  if (!assessment.accessible) return 'Unavailable';
+  if (assessment.status === 'assigned') return 'Start';
+  if (assessment.status === 'in_progress') return 'Resume';
+  if (assessment.status === 'submitted' && assessment.isFullyScored) return 'View result';
+  return null;
+}
+
+const ActionButton = ({ assessment, handleOpen}) => {
+
+  const label = actionLabel(assessment);
+  if (!label) return null;
+  return (
+    <Button
+                type="button"
+                disabled={!assessment.accessible}
+                onClick={() => handleOpen(assessment)}
+              >
+                {label}
+              </Button>
+  )
+}
+
+const StatusPill = ({ assessment }) => {
+  const { status, isFullyScored, accessible, reason } = assessment;
+  let tone;
+  let label;
+  console.log(status);
+
+  if (!accessible) {
+    return(
+      <Pill tone="warning">{reason === 'cancelled' ? 'Cancelled' : 'Expired'}</Pill>
+    );
+  }
+
+  switch(status) {
+    case 'submitted': { tone = 'success'; label = isFullyScored ? 'Graded' : 'Submitted'; break; }
+    case 'assigned' : { tone = 'warning'; label = 'Not Started'; break; }
+    default: tone = 'warning'; label = 'In Progress';
+  }
+ 
+  return(
+    <Pill
+      tone={tone}
+    >
+      {label}
+    </Pill>
+  )
 }
 
 export function CandidateDashboardPage() {
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('new')
+  const [page, setPage] = useState(1);
+  const limit = 25;
   const query = useQuery({
-    queryKey: attemptKeys.all,
-    queryFn: listMyAssessments,
+    queryKey: attemptKeys.all({ page, limit, status: activeTab }),
+    queryFn: () => {
+      const status = TAB_FILTERS.find(ele => ele.id === activeTab)?.statuses[0];
+      return listMyAssessments({ status });
+    },
   })
 
-  const tabConfig = useMemo(() => {
-    const config = {}
-    TAB_FILTERS.forEach((tab) => {
-      config[tab.id] = tab
-    })
-    return config
-  }, [])
-
-  const assessments = useMemo(() => {
-    const list = query.data || []
-    const normalizedSearch = search.trim().toLowerCase()
-    const activeTabStatuses = tabConfig[activeTab]?.statuses || []
-
-    return list.filter((assessment) => {
-      if (!activeTabStatuses.includes(assessment.status)) return false
-      if (!normalizedSearch) return true
-      return (assessment.title || '').toLowerCase().includes(normalizedSearch)
-    })
-  }, [query.data, search, activeTab, tabConfig])
-
-  const tabCounts = useMemo(() => {
-    const list = query.data || []
-    const counts = {}
-    TAB_FILTERS.forEach((tab) => {
-      counts[tab.id] = list.filter((a) => tab.statuses.includes(a.status)).length
-    })
-    return counts
-  }, [query.data])
-
+  const assessments = query.data || [];
   const handleOpen = (assessment) => {
-    if (!assessment.accessible) return
-    navigate(`/candidate/assessments/${assessment.assessmentId}/assignments/${assessment.assignmentId}`)
+    if (!assessment.accessible) return;
+    navigate(`/candidate/assignment/${assessment.assignmentId}/${user.id}/result`);
   }
+
 
   return (
     <DashboardLayout title="Candidate workspace" role="Candidate">
@@ -186,13 +209,12 @@ export function CandidateDashboardPage() {
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
-              <TabCount>({tabCounts[tab.id] || 0})</TabCount>
             </Tab>
           ))}
         </TabList>
-        <Toolbar>
+        {/* <Toolbar>
           <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
-        </Toolbar>
+        </Toolbar> */}
         {query.isLoading && <CommonLoader label="Loading assessments..." />}
         {query.isError && <EmptyState role="alert">{query.error.message}</EmptyState>}
         {!query.isLoading && !query.isError && !assessments.length && <EmptyState>No assessments in this tab.</EmptyState>}
@@ -202,25 +224,21 @@ export function CandidateDashboardPage() {
               <AssessmentContent>
                 <TitleRow>
                   <Title>{assessment.title || 'Untitled assessment'}</Title>
-                  <Pill tone={statusTone[assessment.status] || 'neutral'}>{statusLabel[assessment.status] || assessment.status}</Pill>
-                  {!assessment.accessible && (
-                    <Pill tone="warning">{assessment.reason === 'cancelled' ? 'Cancelled' : 'Expired'}</Pill>
-                  )}
+                  <StatusPill
+                    assessment={assessment}
+                  />
                 </TitleRow>
                 {assessment.description && <Description>{assessment.description}</Description>}
                 <Metadata>
                   <Pill tone="neutral">{assessment.durationMinutes || 0} minutes</Pill>
                   <Pill tone="neutral">{formatDate(assessment.expiresAt)}</Pill>
-                  {assessment.status === 'submitted' && <Pill tone="neutral">Score: {assessment.score ?? '-'}</Pill>}
+                  {assessment.status === 'submitted' && <Pill tone="warning">Score: {assessment.score ?? '-'}</Pill>}
                 </Metadata>
               </AssessmentContent>
-              <Button
-                type="button"
-                disabled={!assessment.accessible}
-                onClick={() => handleOpen(assessment)}
-              >
-                {actionLabel(assessment)}
-              </Button>
+              <ActionButton
+                assessment={assessment}
+                handleOpen={() => handleOpen(assessment)}
+              />
             </AssessmentCard>
           ))}
         </AssessmentList>
