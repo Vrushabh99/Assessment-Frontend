@@ -111,10 +111,11 @@ const statusLabel = {
 }
 
 const TAB_FILTERS = [
-  { id: 'new', label: 'New', statuses: ['assigned'] },
+  { id: 'assigned', label: 'Assigned', statuses: ['assigned'] },
   { id: 'resume', label: 'Resume', statuses: ['in_progress'] },
-  { id: 'completed', label: 'Completed', statuses: ['submitted'] },
+  { id: 'submitted', label: 'Submitted', statuses: ['submitted'] },
   { id: 'graded', label: 'Graded', statuses: ['graded'] },
+  { id: 'expired', label: 'Expired', statuses: ['expired'] },
 ]
 
 const formatDate = (value) => {
@@ -178,7 +179,7 @@ const StatusPill = ({ assessment }) => {
 export function CandidateDashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('new')
+  const [activeTab, setActiveTab] = useState('assigned')
   const [page, setPage] = useState(1);
   const limit = 25;
   const query = useQuery({
@@ -194,7 +195,7 @@ export function CandidateDashboardPage() {
 
     switch(label) {
         case 'Start':
-        case 'Resume': navigate(`/candidate/assessments/${assessment.assessmentId}/assignments/${assessment.assignmentId}`); break;
+        case 'Resume': navigate(`/candidate/assignments/${assessment.assignmentId}`); break;
         case 'Result': navigate(`/candidate/assignment/${assessment.assignmentId}/result`); break;
         case 'Unavailable': break;
         default: return;

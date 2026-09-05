@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { candidateAssessmentKeys, getCandidateAssessment } from '../../../api/attempts'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
@@ -6,6 +6,8 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
 import { Card, TitleRow, Title, Muted, Metadata, RulesList, Actions, ErrorState } from './styles'
+import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
+
 
 const statusTone = {
   assigned: 'neutral',
@@ -43,10 +45,10 @@ const actionLabel = (status) => {
 }
 
 export function AssessmentAttemptPage() {
-  const { assessmentId, assignmentId } = useParams()
+  const { assignmentId } = useParams()
   const query = useQuery({
-    queryKey: candidateAssessmentKeys.detail(assessmentId, assignmentId),
-    queryFn: () => getCandidateAssessment({ assessmentId, assignmentId }),
+    queryKey: candidateAssessmentKeys.detail(assignmentId),
+    queryFn: () => getCandidateAssessment({ assignmentId }),
   })
 
   const data = query.data
@@ -59,16 +61,9 @@ export function AssessmentAttemptPage() {
   const blocked = attempt?.status !== 'submitted' && (isCancelled || isExpired)
 
   const handleAction = () => {
-    if (blocked) return
-    const attemptUrl = `/candidate/assessments/${assessmentId}/assignments/${assignmentId}/attempt`
-    const newWindow = window.open(attemptUrl, 'assessment_attempt', 'width=1200,height=800')
-    if (newWindow) {
-      newWindow.addEventListener('load', () => {
-        if (newWindow.document.documentElement.requestFullscreen) {
-          newWindow.document.documentElement.requestFullscreen()
-        }
-      })
-    }
+    // if (blocked) return
+    const attemptUrl = `/candidate/assignments/${assignmentId}/attempt`
+    window.open(attemptUrl, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -99,12 +94,25 @@ export function AssessmentAttemptPage() {
             <h3>Proctoring rules</h3>
             <Muted>This assessment is monitored. The following actions are tracked and may be limited:</Muted>
             <RulesList>
+            <Table>
+              <TableHead>
+                <TableCell>Rule</TableCell>
+                <TableCell>Limit</TableCell>
+              </TableHead>
+              <TableBody>
+
               {Object.entries(violationLabels).map(([key, label]) => (
-                <li key={key}>
-                  {label}
-                  {assignment.violationLimits?.[key] !== undefined && ` — limit: ${assignment.violationLimits[key]}`}
-                </li>
+                <TableRow key={key}>
+                <TableCell>
+                  {label.toUpperCase()}
+                </TableCell>
+                <TableCell>
+                  {assignment.violationLimits?.[key] !== undefined && `${assignment.violationLimits[key]}`}
+                </TableCell>
+                </TableRow>
               ))}
+              </TableBody>
+            </Table>
             </RulesList>
           </div>
 

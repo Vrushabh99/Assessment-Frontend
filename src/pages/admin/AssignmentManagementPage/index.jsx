@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { assignmentKeys, deleteAssignment, listAssignments } from '../../../api/assignments'
+import { assignmentKeys, deleteAssignment, listAssignments, cancelAssignment } from '../../../api/assignments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Menu } from '../../../components/ui/Menu'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -70,13 +70,16 @@ const Metadata = styled.div`
   font-size: 0.85rem;
 `
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
-const statusTone = { active: 'success', cancelled: 'neutral' }
+const statusTone = { active: 'success', cancelled: 'warning' }
 
 const getAssignments = (data) => data?.assignments || data?.items || []
 
 const formatDate = (value) => {
   if (!value) return 'No expiry'
+
   const date = new Date(value)
+  if (date < new Date()) return 'Expired'
+
   return Number.isNaN(date.getTime())
     ? 'No expiry'
     : `Expires ${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
@@ -97,6 +100,10 @@ export function AssignmentManagementPage() {
     mutationFn: deleteAssignment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
   })
+  const cancelMutation = useMutation({
+    mutationFn: cancelAssignment,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+  })
   const assignments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
     return getAssignments(query.data).filter((assignment) => {
@@ -107,12 +114,6 @@ export function AssignmentManagementPage() {
     })
   }, [query.data, search])
 
-  const counts = useMemo(() => ({
-    total: assignments.length,
-    active: assignments.filter((item) => item.status === 'active').length,
-    submitted: assignments.filter((item) => item.status === 'cancelled').length,
-  }), [assignments])
-
   const getAssessmentId = (assignment) => {
     const assessment = assignment?.assessmentId || assignment?.assessment
     return assessment?._id || assessment?.id || assignment?.assessmentId
@@ -120,6 +121,10 @@ export function AssignmentManagementPage() {
 
   const handleDelete = async (assignmentId) => {
     await deleteMutation.mutateAsync(assignmentId)
+  }
+
+  const handleCancel = async (assignmentId) => {
+    await cancelMutation.mutateAsync(assignmentId)
   }
 
   const getMenuItems = (assignment) => {
@@ -130,6 +135,7 @@ export function AssignmentManagementPage() {
       { id: 'view', label: 'View', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
       { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}/edit`) },
       { isDivider: true },
+      { id: 'cancel', label: 'Cancel', danger: true, disabled: deleteMutation.isPending, onClick: () => handleCancel(assignment._id || assignment.id) },
       { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assignment._id || assignment.id) },
     ]
   }
@@ -157,6 +163,7 @@ export function AssignmentManagementPage() {
           {assignments.map((assignment) => {
             const assessment = assignment.assessmentId || assignment.assessment || {}
             const totalPoints = assessment.totalPoints ?? assignment.totalPoints ?? '-'
+            const expiresAt = formatDate(assignment.expiresAt);
             return (
               <AssignmentCard key={assignment._id || assignment.id}>
                 <AssignmentContent>
@@ -168,7 +175,7 @@ export function AssignmentManagementPage() {
                   <Metadata>
                     <Pill tone="neutral">{assignment.studentCount ?? 0} students</Pill>
                     <Pill tone="neutral">{assignment.durationMinutes || 0} minutes</Pill>
-                    <Pill tone="neutral">{formatDate(assignment.expiresAt)}</Pill>
+                    <Pill tone={expiresAt === 'Expired' ? "warning" :"neutral"}>{expiresAt}</Pill>
                     <Pill tone="neutral">Score: {assignment.score ?? totalPoints}</Pill>
                   </Metadata>
                 </AssignmentContent>

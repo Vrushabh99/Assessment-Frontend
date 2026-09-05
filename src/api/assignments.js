@@ -19,6 +19,11 @@ export async function deleteAssignment(id) {
   return response.data
 }
 
+export async function cancelAssignment(id) {
+  const response = await apiRequest(`/admin/assignments/${id}/cancel`, { method: 'POST' })
+  return response.data
+}
+
 export async function getAssignment(id) {
   const response = await apiRequest(`/admin/assignments/${id}`)
   return response.data

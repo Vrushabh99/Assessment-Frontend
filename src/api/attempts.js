@@ -12,52 +12,52 @@ export async function listMyAssessments({ page = 1, limit = 100, status = ''}) {
 }
 
 export const candidateAssessmentKeys = {
-  detail: (assessmentId, assignmentId) => ['candidateAssessment', assessmentId, assignmentId],
-  attempt: (assessmentId, assignmentId) => ['attemptState', assessmentId, assignmentId],
+  detail: ( assignmentId) => ['candidateAssessment',  assignmentId],
+  attempt: ( assignmentId) => ['attemptState',  assignmentId],
 }
 
-export async function getCandidateAssessment({ assessmentId, assignmentId }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}`)
+export async function getCandidateAssessment({ assignmentId }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}`)
   return response.data
 }
 
-export async function startAndGetAttemptState({ assessmentId, assignmentId }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/start`, {
+export async function startAndGetAttemptState({  assignmentId }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/start`, {
     method: 'POST',
   })
   return response.data
 }
 
-export async function startAttempt({ assessmentId, assignmentId }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/start`, {
+export async function startAttempt({  assignmentId }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/start`, {
     method: 'POST',
   })
   return response.data
 }
 
-export async function getAttemptState({ assessmentId, assignmentId }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/attempt`)
+export async function getAttemptState({  assignmentId }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/attempt`)
   return response.data
 }
 
-export async function saveAnswer({ assessmentId, assignmentId, questionId, selectedOptionIds, textAnswer }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/answers`, {
+export async function saveAnswer({  assignmentId, questionId, selectedOptionIds, textAnswer }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/answers`, {
     method: 'PATCH',
     body: JSON.stringify({ questionId, selectedOptionIds, textAnswer }),
   })
   return response.data
 }
 
-export async function logViolation({ assessmentId, assignmentId, type }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/violations`, {
+export async function logViolation({  assignmentId, type }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/violations`, {
     method: 'POST',
     body: JSON.stringify({ type }),
   })
   return response.data
 }
 
-export async function submitAttempt({ assessmentId, assignmentId }) {
-  const response = await apiRequest(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}/submit`, {
+export async function submitAttempt({  assignmentId }) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/submit`, {
     method: 'POST',
   })
   return response.data

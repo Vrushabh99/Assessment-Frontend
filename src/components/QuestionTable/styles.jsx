@@ -28,9 +28,9 @@ export const QuestionContent = styled.div`
 
 export const QuestionId = styled.div`
   font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.muted};
+  color: ${({ theme }) => theme.colors.text};
   font-family: monospace;
-  font-weight: 500;
+  font-weight: 700;
 `
 
 export const QuestionText = styled.h3`

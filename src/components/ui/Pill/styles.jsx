@@ -30,4 +30,5 @@ export const PillContent = styled.span`
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
+  text-transform: capitalize;
 `

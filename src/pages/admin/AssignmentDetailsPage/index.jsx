@@ -269,7 +269,7 @@ export function AssignmentDetailsPage() {
     )
   }
 
-  const assignment = assignmentQuery.data;
+  const assignment = assignmentQuery.data.assignment;
   const assessment = assignment?.assessmentId || assignment?.assessment || {}
   const displayedCandidates = candidatesQuery.data?.candidates || []
 

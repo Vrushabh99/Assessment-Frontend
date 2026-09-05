@@ -34,8 +34,8 @@ export function QuestionTable({ questions, onEdit, onDelete }) {
             <QuestionMetadata>
               <Pill tone={getTone(question.type)}>{formatLabel(question.type)}</Pill>
               <Pill tone={getTone(question.difficulty)}>{formatLabel(question.difficulty)}</Pill>
-              <span>{question.usage} assessments</span>
               <Pill tone={getTone(question.status)}>{formatLabel(question.status)}</Pill>
+              <Pill tone="info">Points: {question.points}</Pill>
             </QuestionMetadata>
           </QuestionContent>
           <CardActions>

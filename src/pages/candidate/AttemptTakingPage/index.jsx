@@ -9,6 +9,10 @@ import {
   startAndGetAttemptState,
   submitAttempt,
 } from '../../../api/attempts'
+import {
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
@@ -74,16 +78,19 @@ const fromApiAnswer = (question, savedAnswer) => {
 }
 
 export function AttemptTakingPage() {
-  const { assessmentId, assignmentId } = useParams()
+  const { assignmentId } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const stateKey = candidateAssessmentKeys.detail(assessmentId, assignmentId)
+  const stateKey = candidateAssessmentKeys.detail(assignmentId)
   const [answers, setAnswers] = useState({})
   const [remainingMs, setRemainingMs] = useState(null)
   const [savingIds, setSavingIds] = useState({})
   const [submitError, setSubmitError] = useState(null)
   const hasSubmittedRef = useRef(false)
   const timerRef = useRef(null)
+  const [snackbar, setSnackbar] = useState({ open: false })
+  const [fullscreenReady, setFullscreenReady] = useState(() => Boolean(document.fullscreenElement))
+  const [fullscreenError, setFullscreenError] = useState(null)
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -93,20 +100,13 @@ export function AttemptTakingPage() {
   }, [])
 
   const stateQuery = useQuery({
-    queryKey: candidateAssessmentKeys.attempt(assessmentId, assignmentId),
-    queryFn: () => startAndGetAttemptState({ assessmentId, assignmentId }),
+    queryKey: candidateAssessmentKeys.attempt( assignmentId),
+    queryFn: () => startAndGetAttemptState({  assignmentId }),
   })
 
   useEffect(() => {
     stateQuery.refetch()
-    // Request fullscreen when attempt starts
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn('Fullscreen request denied:', err)
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assessmentId, assignmentId])
+  }, [assignmentId])
 
   useEffect(() => {
     if (!stateQuery.data) return
@@ -118,8 +118,22 @@ export function AttemptTakingPage() {
     setAnswers(nextAnswers)
   }, [stateQuery.data])
 
+  const handleEnterFullscreenAndBegin = () => {
+   setFullscreenError(null)
+   if (!document.documentElement.requestFullscreen) {
+     setFullscreenReady(true)
+     return
+   }
+   document.documentElement
+     .requestFullscreen()
+     .then(() => setFullscreenReady(true))
+     .catch((err) => {
+       console.warn('Fullscreen request denied:', err)
+       setFullscreenError('Fullscreen was blocked or denied. Please allow fullscreen and try again.')
+     })
+ }
   const submitMutation = useMutation({
-    mutationFn: () => submitAttempt({ assessmentId, assignmentId }),
+    mutationFn: () => submitAttempt({  assignmentId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: stateKey })
       navigate('/candidate')
@@ -174,7 +188,7 @@ export function AttemptTakingPage() {
   }, [expiresAt, serverTime, isSubmittedStatus])
 
   const saveAnswerMutation = useMutation({
-    mutationFn: ({ question, answer }) => saveAnswer({ assessmentId, assignmentId, questionId: question._id, ...toApiAnswer(question, answer) }),
+    mutationFn: ({ question, answer }) => saveAnswer({  assignmentId, questionId: question._id, ...toApiAnswer(question, answer) }),
   })
 
   const debounceTimers = useRef({})
@@ -200,23 +214,40 @@ export function AttemptTakingPage() {
   }
 
   const logViolationMutation = useMutation({
-    mutationFn: (type) => logViolation({ assessmentId, assignmentId, type }),
+    mutationFn: (type) => logViolation({  assignmentId, type }),
     onSuccess: (data) => {
       if (data.autoSubmitted) {
         hasSubmittedRef.current = true
         queryClient.invalidateQueries({ queryKey: stateKey })
-        navigate(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}`)
+        navigate(`/candidate/assignments`)
       }
     },
   })
 
+  const getLabel = (type) => {
+    switch(type) {
+      case 'tab_switch': return 'Tab Switch Attempt.'; 
+      case 'window_blur': return 'Window Blur Attempt.';
+      case 'fullscreen_exit': return 'Fullscreen changed';
+      case 'copy': 
+      case 'paste': 
+      case 'right_click': return 'Copy / Paste / Right Click';
+    }
+    return '';
+  }
   const reportViolation = useCallback(
     (type) => {
       if (hasSubmittedRef.current || stateQuery.data?.status === 'submitted') return
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: `System Detected: ${getLabel(type)}`,
+      })
       logViolationMutation.mutate(type)
     },
     [logViolationMutation, stateQuery.data?.status]
   )
+
 
   useEffect(() => {
     if (!stateQuery.data || stateQuery.data.status === 'submitted') return undefined
@@ -225,9 +256,7 @@ export function AttemptTakingPage() {
       if (document.hidden) reportViolation('tab_switch')
     }
     const onBlur = () => reportViolation('window_blur')
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement) reportViolation('fullscreen_exit')
-    }
+  
     const onCopy = (event) => {
       event.preventDefault()
       reportViolation('copy')
@@ -240,10 +269,30 @@ export function AttemptTakingPage() {
       event.preventDefault()
       reportViolation('right_click')
     }
+    const onFullscreenChange = () => {
+      const isFullscreen = Boolean(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      )
+      if (!isFullscreen) {
+        reportViolation('fullscreen_exit')
+        setFullscreenReady(false);
+      }
+  }
 
+  const events = [
+    'fullscreenchange',
+    'webkitfullscreenchange',
+    'mozfullscreenchange',
+    'MSFullscreenChange',
+  ]
+
+    events.forEach((evt) => document.addEventListener(evt, onFullscreenChange))
+    
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('blur', onBlur)
-    document.addEventListener('fullscreenchange', onFullscreenChange)
     document.addEventListener('copy', onCopy)
     document.addEventListener('paste', onPaste)
     document.addEventListener('contextmenu', onContextMenu)
@@ -255,34 +304,39 @@ export function AttemptTakingPage() {
       document.removeEventListener('copy', onCopy)
       document.removeEventListener('paste', onPaste)
       document.removeEventListener('contextmenu', onContextMenu)
+      events.forEach((evt) => document.removeEventListener(evt, onFullscreenChange))
     }
   }, [stateQuery.data, reportViolation])
 
   const isWarning = remainingMs !== null && remainingMs <= 5 * 60 * 1000
   const isSubmitted = stateQuery.data?.status === 'submitted'
 
-  const violationSummary = useMemo(() => {
-    if (!stateQuery.data) return []
-    const counts = stateQuery.data.violationCounts || {}
-    const limits = stateQuery.data.violationLimits || {}
-    return Object.keys(counts)
-      .filter((key) => counts[key] > 0)
-      .map((key) => `${key.replace('_', ' ')}: ${counts[key]}${limits[key] !== undefined ? `/${limits[key]}` : ''}`)
-  }, [stateQuery.data])
-
+  const needsFullscreenGate = Boolean(stateQuery.data) && !isSubmitted && !fullscreenReady;
   return (
     <DashboardLayout title="Assessment attempt" role="Candidate" hideNavigation>
       {stateQuery.isLoading && <CommonLoader label="Loading assessment..." />}
       {stateQuery.isError && <ErrorState role="alert">{stateQuery.error.message}</ErrorState>}
       {submitError && <ErrorState role="alert">{submitError}</ErrorState>}
-      {stateQuery.data && (
+      {stateQuery.data &&needsFullscreenGate && (
+       <Header>
+         <TitleBlock>
+           <Title>{stateQuery.data.assessment.title}</Title>
+           <SaveState>
+             This assessment is proctored and must be taken in fullscreen. Click below to enter
+             fullscreen and begin — exiting fullscreen during the attempt is tracked as a violation.
+           </SaveState>
+           {fullscreenError && <ErrorState role="alert">{fullscreenError}</ErrorState>}
+         </TitleBlock>
+         <Button type="button" onClick={handleEnterFullscreenAndBegin}>
+           Enter fullscreen &amp; Continue
+         </Button>
+       </Header>
+     )}
+      {stateQuery.data && !needsFullscreenGate &&(
         <Layout>
           <Header>
             <TitleBlock>
               <Title>{stateQuery.data.assessment.title}</Title>
-              {violationSummary.length > 0 && (
-                <SaveState>Proctoring: {violationSummary.join(', ')}</SaveState>
-              )}
             </TitleBlock>
             <ActionWrapper>
               {!isSubmitted && remainingMs !== null && (
@@ -322,6 +376,9 @@ export function AttemptTakingPage() {
               </div>
             ))}
           </QuestionList>
+          <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>
+            <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
+          </Snackbar>
         </Layout>
       )}
     </DashboardLayout>

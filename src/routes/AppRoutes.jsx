@@ -99,11 +99,11 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><CandidateDashboardPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assessments/:assessmentId/assignments/:assignmentId"
+          path="/candidate/assignments/:assignmentId"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AssessmentAttemptPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assessments/:assessmentId/assignments/:assignmentId/attempt"
+          path="/candidate/assignments/:assignmentId/attempt"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AttemptTakingPage /></ProtectedRoute>}
         />
         <Route

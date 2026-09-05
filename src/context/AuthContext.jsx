@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
   
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest('/auth/logout', { method: 'POST' }),
-    onSuccess: () => queryClient.setQueryData(['auth', 'me'], null),
+    onSuccess: () => { queryClient.clear() },
   })
 
   const value = useMemo(() => ({
