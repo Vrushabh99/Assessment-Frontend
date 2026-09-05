@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '../../../api/client'
 import { assessmentKeys, getAssessment } from '../../../api/assessments'
 import { assignAssessment, assignmentKeys, getAssignment, updateAssignment } from '../../../api/assignments'
@@ -28,7 +29,6 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { Form, FormHeader, Page, Actions, Summary, SummaryItem, DurationGroup } from './styles'
-import { useQuery } from '@tanstack/react-query'
 
 const defaultViolationLimits = { tab_switch: 3, window_blur: 3, fullscreen_exit: 2, copy: 2, paste: 2, right_click: 5 }
 const violationLabels = { tab_switch: 'Tab switch', window_blur: 'Window blur', fullscreen_exit: 'Fullscreen exit', copy: 'Copy', paste: 'Paste', right_click: 'Right click' }
@@ -48,16 +48,18 @@ const normalizeCandidates = (payload) => {
   return Array.isArray(candidates) ? candidates : []
 }
 
+
 export function AssignAssessmentPage() {
   const navigate = useNavigate()
   const { assessmentId, assignmentId } = useParams()
   const isEdit = Boolean(assignmentId)
+
   const assignmentQuery = useQuery({
     queryKey: assignmentKeys.detail(assignmentId),
     queryFn: () => getAssignment(assignmentId),
     enabled: isEdit,
   })
-  const [selectedCandidates, setSelectedCandidates] = useState([])
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState([])
   const [candidatePage, setCandidatePage] = useState(1)
   const [candidateSearch, setCandidateSearch] = useState('')
   const [durationHours, setDurationHours] = useState('')
@@ -69,22 +71,24 @@ export function AssignAssessmentPage() {
   const [loading, setLoading] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [step, setStep] = useState(0)
+
   const assignmentResponse = assignmentQuery.data
   const assignment = assignmentResponse?.assignment || assignmentResponse
-  const assignmentStudents = useMemo(
-    () => assignmentResponse?.students || assignment?.students || [],
-    [assignmentResponse, assignment],
-  )
+  const assignmentStudents = assignmentResponse?.assignedCandidates
+
   const assignedAssessment = assignment?.assessmentId
   const assessmentIdForQuery = isEdit ? undefined : assessmentId
+
   const assessmentQuery = useQuery({
     queryKey: assessmentKeys.detail(assessmentIdForQuery),
     queryFn: () => getAssessment(assessmentIdForQuery),
     enabled: Boolean(assessmentIdForQuery),
   })
+
   const assessment = isEdit
     ? assignedAssessment
     : assessmentQuery.data?.assessment || assessmentQuery.data
+
   const candidatesQuery = useQuery({
     queryKey: [...candidateKeys.all, { search: candidateSearch }],
     queryFn: () => listCandidates({ search: candidateSearch, limit: 100 }),
@@ -96,6 +100,7 @@ export function AssignAssessmentPage() {
   const visibleCandidates = candidateOptions.slice((candidatePage - 1) * candidatesPerPage, candidatePage * candidatesPerPage)
   const totalDurationMinutes = (Number(durationHours || 0) * 60) + Number(durationMinutes || 0)
 
+  // Initialize assignment fields and candidate ID selections
   useEffect(() => {
     if (!isEdit || !assignment) return
     setDurationHours(String(Math.floor(assignment.durationMinutes / 60)))
@@ -103,7 +108,8 @@ export function AssignAssessmentPage() {
     setExpiresAt(toDateTimeInput(assignment.expiresAt))
     setDescription(assignment.description || '')
     setViolationLimits({ ...defaultViolationLimits, ...assignment.violationLimits })
-    setSelectedCandidates(assignmentStudents.map((student) => student.candidate || student.candidateId).filter(Boolean))
+    setSelectedCandidateIds(assignmentStudents)
+
   }, [assignment, assignmentStudents, isEdit])
 
   const validateConfiguration = () => {
@@ -125,7 +131,7 @@ export function AssignAssessmentPage() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = {}
-    if (!selectedCandidates.length) nextErrors.candidates = 'Select at least one candidate'
+    if (!selectedCandidateIds.length) nextErrors.candidates = 'Select at least one candidate'
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
 
@@ -138,12 +144,10 @@ export function AssignAssessmentPage() {
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
         description: description || undefined,
       }
-      const existingIds = new Set(assignmentStudents.map((student) => {
-        const candidate = student.candidate || student.candidateId
-        return candidate?._id || candidate?.id || candidate
-      }))
 
-      const newCandidates = selectedCandidates.filter((candidate) => !existingIds.has(candidate._id || candidate.id))
+      // Collect existing candidate IDs safely from ID strings or object models
+      const existingIds = new Set((assignmentStudents || []))
+      const newCandidateIds = selectedCandidateIds.filter((id) => !existingIds.has(id))
 
       // Check if assignment properties actually changed
       const hasPropertyChanges = assignment && (
@@ -155,28 +159,27 @@ export function AssignAssessmentPage() {
 
       let response
       if (isEdit) {
-        // Only call updateAssignment if properties actually changed
         if (hasPropertyChanges) {
           response = await updateAssignment({ id: assignmentId, ...payload })
         } else {
           response = { data: assignment }
         }
 
-        // Add new candidates if any
-        if (newCandidates.length > 0) {
+        if (newCandidateIds.length > 0) {
           response = await assignAssessment({
             assessmentId: assignedAssessment?._id || assignedAssessment?.id || assignedAssessment,
             assignmentId,
             ...payload,
-            candidateIds: newCandidates.map((candidate) => candidate._id || candidate.id),
+            candidateIds: newCandidateIds,
           })
         }
       } else {
         response = await apiRequest(`/admin/assessments/${assessmentId}/assign`, {
           method: 'POST',
-          body: JSON.stringify({ ...payload, candidateIds: selectedCandidates.map((candidate) => candidate._id) }),
+          body: JSON.stringify({ ...payload, candidateIds: selectedCandidateIds }),
         })
       }
+
       const result = response.data || {}
       const skipped = result.skipped || {}
       let message = `${result.studentsAssigned || 0} candidate(s) assigned.`
@@ -200,8 +203,12 @@ export function AssignAssessmentPage() {
             <p>{isEdit ? 'Update assignment settings and add candidates.' : 'Select candidates and configure assessment access.'}</p>
           </div>
         </FormHeader>
-        {(assessmentQuery.isLoading || assignmentQuery.isLoading) && <CommonLoader label={isEdit ? 'Loading assignment...' : 'Loading assessment details...'} />}
-        {(assessmentQuery.isError || assignmentQuery.isError) && <Typography color="error">{(assessmentQuery.error || assignmentQuery.error).message}</Typography>}
+        {(assessmentQuery.isLoading || assignmentQuery.isLoading) && (
+          <CommonLoader label={isEdit ? 'Loading assignment...' : 'Loading assessment details...'} />
+        )}
+        {(assessmentQuery.isError || assignmentQuery.isError) && (
+          <Typography color="error">{(assessmentQuery.error || assignmentQuery.error).message}</Typography>
+        )}
         {assessment && (
           <Summary aria-label="Assessment summary">
             <SummaryItem><strong>Assessment</strong><span>{assessment.title}</span></SummaryItem>
@@ -266,26 +273,29 @@ export function AssignAssessmentPage() {
                 />
                 {candidatesQuery.isError && <Typography color="error" variant="caption">{candidatesQuery.error.message}</Typography>}
                 <Stack sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, px: 1 }}>
-                  {visibleCandidates.map((candidate) => (
-                    <FormControlLabel
-                      key={candidate._id}
-                      control={(
-                        <Checkbox
-                          checked={selectedCandidates.some((selected) => selected._id === candidate._id)}
-                          onChange={(event) => {
-                            const nextCandidates = event.target.checked
-                              ? [...selectedCandidates, candidate]
-                              : selectedCandidates.filter((selected) => selected._id !== candidate._id)
-                            setSelectedCandidates(nextCandidates)
-                            if (nextCandidates.length) {
-                              setErrors((current) => ({ ...current, candidates: undefined }))
-                            }
-                          }}
-                        />
-                      )}
-                      label={`${candidate.firstName || ''} ${candidate.lastName || ''} (${candidate.email || 'No email'})`}
-                    />
-                  ))}
+                  {visibleCandidates.map((candidate) => {
+                    const candId = candidate._id || candidate.id
+                    return (
+                      <FormControlLabel
+                        key={candId}
+                        control={(
+                          <Checkbox
+                            checked={selectedCandidateIds.includes(candId)}
+                            onChange={(event) => {
+                              const nextIds = event.target.checked
+                                ? [...selectedCandidateIds, candId]
+                                : selectedCandidateIds.filter((id) => id !== candId)
+                              setSelectedCandidateIds(nextIds)
+                              if (nextIds.length) {
+                                setErrors((current) => ({ ...current, candidates: undefined }))
+                              }
+                            }}
+                          />
+                        )}
+                        label={`${candidate.firstName || ''} ${candidate.lastName || ''} (${candidate.email || 'No email'})`}
+                      />
+                    )
+                  })}
                   {!candidatesQuery.isLoading && !visibleCandidates.length && <Typography sx={{ p: 2 }} color="text.secondary">No candidates found.</Typography>}
                 </Stack>
                 {errors.candidates && <Typography color="error" variant="caption">{errors.candidates}</Typography>}
@@ -298,7 +308,7 @@ export function AssignAssessmentPage() {
                   />
                 )}
                 <Typography variant="caption" color="text.secondary">
-                  {selectedCandidates.length} candidate{selectedCandidates.length === 1 ? '' : 's'} selected
+                  {selectedCandidateIds.length} candidate{selectedCandidateIds.length === 1 ? '' : 's'} selected
                 </Typography>
               </div>
             </Stack>
