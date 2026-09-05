@@ -20,20 +20,6 @@ const Header = styled.div`
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-const Stats = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
-`
-const StatCard = styled.article`
-  padding: 20px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-`
-const StatLabel = styled.span`color: ${({ theme }) => theme.colors.muted};`
-const StatValue = styled.strong`display: block; margin-top: 6px; font-size: 1.75rem;`
 const Card = styled.section`
   overflow: hidden;
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -89,11 +75,6 @@ export function AssessmentManagementPage() {
     mutationFn: deleteAssessment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
   })
-  const counts = useMemo(() => ({
-    total: assessmentsQuery.data?.total || assessments.length,
-    published: assessments.filter(({ status: itemStatus }) => itemStatus === 'published').length,
-    points: assessments.reduce((total, assessment) => total + Number(assessment.totalPoints || 0), 0),
-  }), [assessments, assessmentsQuery.data])
 
   const handleDelete = async (assessmentId) => {
     await deleteMutation.mutateAsync(assessmentId)
@@ -116,11 +97,6 @@ export function AssessmentManagementPage() {
         </div>
         <Button type="button" onClick={() => navigate('/admin/assessments/new')}>+ Create assessment</Button>
       </Header>
-      <Stats>
-        <StatCard><StatLabel>Assessments</StatLabel><StatValue>{counts.total}</StatValue></StatCard>
-        <StatCard><StatLabel>Published</StatLabel><StatValue>{counts.published}</StatValue></StatCard>
-        <StatCard><StatLabel>Total points</StatLabel><StatValue>{counts.points}</StatValue></StatCard>
-      </Stats>
       <Card>
         <Toolbar>
           <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -149,8 +125,8 @@ export function AssessmentManagementPage() {
         </AssessmentList>
         <Pagination
           currentPage={page}
-          totalPages={assessmentsQuery.data?.totalPages || 1}
-          totalItems={counts.total}
+          totalPages={assessmentsQuery.data?.pagination?.totalPages || 1}
+          totalItems={assessmentsQuery.data?.pagination?.total}
           onPageChange={setPage}
           itemLabel="assessments"
         />

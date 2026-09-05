@@ -129,7 +129,7 @@ const actionLabel = (assessment) => {
   if (!assessment.accessible) return 'Unavailable';
   if (assessment.status === 'assigned') return 'Start';
   if (assessment.status === 'in_progress') return 'Resume';
-  if (assessment.status === 'submitted' && assessment.isFullyScored) return 'View result';
+  if (assessment.status === 'submitted' && assessment.isFullyScored) return 'Result';
   return null;
 }
 
@@ -139,12 +139,12 @@ const ActionButton = ({ assessment, handleOpen}) => {
   if (!label) return null;
   return (
     <Button
-                type="button"
-                disabled={!assessment.accessible}
-                onClick={() => handleOpen(assessment)}
-              >
-                {label}
-              </Button>
+      type="button"
+      disabled={!assessment.accessible}
+      onClick={() => handleOpen(assessment, label)}
+    >
+      {label}
+    </Button>
   )
 }
 
@@ -190,9 +190,15 @@ export function CandidateDashboardPage() {
   })
 
   const assessments = query.data || [];
-  const handleOpen = (assessment) => {
-    if (!assessment.accessible) return;
-    navigate(`/candidate/assignment/${assessment.assignmentId}/${user.id}/result`);
+  const handleOpen = (assessment, label) => {
+
+    switch(label) {
+        case 'Start':
+        case 'Resume': navigate(`/candidate/assessments/${assessment.assessmentId}/assignments/${assessment.assignmentId}`); break;
+        case 'Result': navigate(`/candidate/assignment/${assessment.assignmentId}/result`); break;
+        case 'Unavailable': break;
+        default: return;
+    }
   }
 
 
@@ -237,7 +243,7 @@ export function CandidateDashboardPage() {
               </AssessmentContent>
               <ActionButton
                 assessment={assessment}
-                handleOpen={() => handleOpen(assessment)}
+                handleOpen={(assessment, label) => handleOpen(assessment, label)}
               />
             </AssessmentCard>
           ))}

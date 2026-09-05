@@ -45,9 +45,10 @@ export function CandidateManagementPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const limit = 20;
   const candidatesQuery = useQuery({
-    queryKey: [...candidateKeys.all, { search, page }],
-    queryFn: () => listCandidates({ search, page }),
+    queryKey: [...candidateKeys.all, { search, page, limit }],
+    queryFn: () => listCandidates({ search, page, limit }),
   })
   const candidates = useMemo(() => candidatesQuery.data?.candidates || [], [candidatesQuery.data])
   const pagination = candidatesQuery.data?.pagination
@@ -109,7 +110,6 @@ export function CandidateManagementPage() {
           itemLabel={`candidate${total === 1 ? '' : 's'}`}
         />
       </Card>
-      <Muted>{total} candidate{total === 1 ? '' : 's'}</Muted>
     </DashboardLayout>
   )
 }

@@ -107,7 +107,7 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AttemptTakingPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assignment/:assignmentId/:candidateId/result"
+          path="/candidate/assignment/:assignmentId/result"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><ResultViewPage /></ProtectedRoute>}
         />
         <Route path="*" element={<Navigate to="/login" replace />} />

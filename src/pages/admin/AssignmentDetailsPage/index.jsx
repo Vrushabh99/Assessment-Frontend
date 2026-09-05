@@ -360,7 +360,7 @@ export function AssignmentDetailsPage() {
 
         <Card>
           <h3 style={{ marginTop: 0 }}>
-            Student Submissions ({candidatesQuery.data?.total || 0})
+            Student Submissions ({candidatesQuery?.data?.pagination.total || 0})
           </h3>
 
           <Toolbar>
@@ -455,10 +455,10 @@ export function AssignmentDetailsPage() {
                 </Table>
               </StudentsTable>
 
-              {(candidatesQuery.data?.totalPages || 1) > 1 && (
+              {(candidatesQuery.data?.pagination?.totalPages || 1) > 1 && (
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={candidatesQuery.data?.totalPages || 1}
+                  totalPages={candidatesQuery.data?.pagination?.totalPages || 1}
                   onPageChange={setCurrentPage}
                 />
               )}

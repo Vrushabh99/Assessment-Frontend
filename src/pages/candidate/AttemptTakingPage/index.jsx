@@ -122,7 +122,7 @@ export function AttemptTakingPage() {
     mutationFn: () => submitAttempt({ assessmentId, assignmentId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: stateKey })
-      navigate(`/candidate/assessments/${assessmentId}/assignments/${assignmentId}`)
+      navigate('/candidate')
     },
     onError: (error) => setSubmitError(error.message),
   })

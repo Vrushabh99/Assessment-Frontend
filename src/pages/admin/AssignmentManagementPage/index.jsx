@@ -9,6 +9,7 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
+import { Pagination } from '../../../components/ui/Pagination'
 
 const Header = styled.div`
   display: flex;
@@ -86,9 +87,11 @@ export function AssignmentManagementPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  const limit = 20
   const query = useQuery({
-    queryKey: [...assignmentKeys.all, { search, status }],
-    queryFn: () => listAssignments({ status: status === 'all' ? '' : status }),
+    queryKey: [...assignmentKeys.all, { search, status, page, limit }],
+    queryFn: () => listAssignments({ search, page, limit, status: status === 'all' ? '' : status }),
   })
   const deleteMutation = useMutation({
     mutationFn: deleteAssignment,
@@ -131,6 +134,9 @@ export function AssignmentManagementPage() {
     ]
   }
 
+  const pagination = query.data?.pagination
+  const total = pagination?.total ?? query.length
+  const totalPages = pagination?.totalPages ?? 1
   return (
     <DashboardLayout title="Assignment management" role="Administrator">
       <Header>
@@ -174,7 +180,13 @@ export function AssignmentManagementPage() {
           })}
         </AssignmentList>
       </Card>
-      <Muted>{counts.total} total • {counts.active} active • {counts.submitted} submitted</Muted>
+      <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                onPageChange={setPage}
+                itemLabel={`Assignment${total === 1 ? '' : 's'}`}
+              />
     </DashboardLayout>
   )
 }

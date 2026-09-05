@@ -215,11 +215,11 @@ const StatusPill = ({ submission }) => {
 
 export function ResultViewPage() {
   const navigate = useNavigate()
-  const { assignmentId, candidateId } = useParams()
+  const { assignmentId } = useParams()
 
   const submissionQuery = useQuery({
-    queryKey: submissionKeys.detail( assignmentId, candidateId),
-    queryFn: () => getSubmission(assignmentId, candidateId),
+    queryKey: submissionKeys.detail( assignmentId),
+    queryFn: () => getSubmission(assignmentId),
   })
 
 

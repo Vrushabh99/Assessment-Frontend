@@ -5,8 +5,6 @@ import { PaginationWrapper, PaginationInfo, PaginationControls, PageButton, Page
 export function Pagination({ currentPage, totalPages, totalItems, onPageChange, itemLabel = 'items' }) {
   const [inputValue, setInputValue] = useState(String(currentPage))
 
-  if (totalPages <= 1) return null
-
   const handleInputChange = (e) => {
     setInputValue(e.target.value)
   }

@@ -30,9 +30,6 @@ const Header = styled.div`
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 24px;
-  @media (max-width: 640px) {
-    flex-direction: column;
-  }
 `
 
 const HeaderContent = styled.div`
@@ -59,6 +56,7 @@ const MetadataRow = styled.div`
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
+  text-transform: Uppercase;
 `
 
 const Muted = styled.p`
@@ -197,7 +195,6 @@ const StatusPill = ({ submission }) => {
   const { status, isFullyScored } = submission;
   let tone;
   let label;
-  console.log(status);
   switch(status) {
     case 'submitted': { tone = 'success'; label = isFullyScored ? 'Graded' : 'Submitted'; break; }
     case 'assigned' : { tone = 'warning'; label = 'Not Started'; break; }
@@ -283,15 +280,22 @@ export function SubmissionViewPage() {
         <Card>
           <Header>
             <HeaderContent>
-              <h2>{isGradingMode ? 'Grade Submission' : 'View Submission'}</h2>
+              <h2>
+                {isGradingMode ? 'Grade Submission' : 'View Submission'}
+              </h2>
               <MetadataRow>
                 <StatusPill
                   submission={submission}
                 />
+                {submission.autoSubmittedReason === 'violation_limit_exceeded' && (
+                <Pill tone="warning">
+                  Violated: {submission.autoSubmittedViolationType}
+                </Pill>
+            )}
               </MetadataRow>
             </HeaderContent>
             <HeaderActions>
-              <Button variant="secondary" onClick={() => navigate(-1)}>
+              <Button variant="primary" onClick={() => navigate(-1)}>
                 Back
               </Button>
             </HeaderActions>

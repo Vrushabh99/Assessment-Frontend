@@ -19,16 +19,6 @@ const Header = styled.div`
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-const Stats = styled.div`
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
-`
-const StatCard = styled.article`
-  padding: 20px; border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 12px; background: ${({ theme }) => theme.colors.surface};
-`
-const StatLabel = styled.span`color: ${({ theme }) => theme.colors.muted};`
-const StatValue = styled.strong`display: block; margin-top: 6px; font-size: 1.75rem;`
 const Card = styled.section`
   overflow: hidden; border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 16px; background: ${({ theme }) => theme.colors.surface};
@@ -46,7 +36,7 @@ export function QuestionsDashboardPage() {
   const [type, setType] = useState('all')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
-  const limit = 2
+  const limit = 20
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search), 300)
@@ -82,11 +72,6 @@ export function QuestionsDashboardPage() {
         </div>
         <Button type="button" onClick={() => navigate('/admin/questions/new')}>+ Add question</Button>
       </Header>
-      <Stats>
-        <StatCard><StatLabel>Total questions</StatLabel><StatValue>{questions.length}</StatValue></StatCard>
-        <StatCard><StatLabel>Published</StatLabel><StatValue>{questions.filter(({ status }) => status === 'published').length}</StatValue></StatCard>
-        <StatCard><StatLabel>Used in assessments</StatLabel><StatValue>{questions.reduce((total, question) => total + question.usage, 0)}</StatValue></StatCard>
-      </Stats>
       <Card>
         <Toolbar>
           <TextField id="question-search" aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} />
