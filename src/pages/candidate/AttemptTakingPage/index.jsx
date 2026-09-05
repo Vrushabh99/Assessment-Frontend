@@ -59,9 +59,11 @@ const ErrorState = styled.p`color: #b42318;`
 
 const formatSeconds = (totalSeconds) => {
   const clamped = Math.max(0, Math.floor(totalSeconds))
-  const minutes = Math.floor(clamped / 60)
+  const hours = Math.floor(clamped / 3600)
+  const minutes = Math.floor((clamped % 3600) / 60)
   const seconds = clamped % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 const toApiAnswer = (question, answer) => {

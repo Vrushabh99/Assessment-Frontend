@@ -239,7 +239,7 @@ export function CandidateDashboardPage() {
                 <Metadata>
                   <Pill tone="neutral">{assessment.durationMinutes || 0} minutes</Pill>
                   <Pill tone="neutral">{formatDate(assessment.expiresAt)}</Pill>
-                  {assessment.status === 'submitted' && <Pill tone="warning">Score: {assessment.score ?? '-'}</Pill>}
+                  {assessment.status === 'submitted' && assessment.isFullyScored && <Pill tone="warning">Score: {assessment.score ?? '-'}</Pill>}
                 </Metadata>
               </AssessmentContent>
               <ActionButton

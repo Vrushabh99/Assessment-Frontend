@@ -30,9 +30,6 @@ const Header = styled.div`
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 24px;
-  @media (max-width: 640px) {
-    flex-direction: column;
-  }
 `
 
 const HeaderContent = styled.div`
