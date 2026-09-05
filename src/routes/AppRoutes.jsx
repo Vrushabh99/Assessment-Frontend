@@ -18,6 +18,7 @@ import { AssessmentAttemptPage } from '../pages/candidate/AssessmentAttemptPage'
 import { AttemptTakingPage } from '../pages/candidate/AttemptTakingPage'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { AuthProvider } from '../context/AuthContext'
+import { ResultViewPage } from '../pages/candidate/ResultViewPage'
 
 export function AppRoutes() {
   return (
@@ -86,11 +87,11 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><QuestionEditorPage /></ProtectedRoute>}
         />
         <Route
-          path="/admin/submissions/:submissionId"
+          path="/admin/submissions/:assignmentId/:candidateId"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><SubmissionViewPage /></ProtectedRoute>}
         />
         <Route
-          path="/admin/submissions/:submissionId/grade"
+          path="/admin/submissions/:assignmentId/:candidateId/grade"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><SubmissionViewPage /></ProtectedRoute>}
         />
         <Route
@@ -104,6 +105,10 @@ export function AppRoutes() {
         <Route
           path="/candidate/assessments/:assessmentId/assignments/:assignmentId/attempt"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AttemptTakingPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/candidate/assignment/:assignmentId/:candidateId/result"
+          element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><ResultViewPage /></ProtectedRoute>}
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
