@@ -1,11 +1,13 @@
 import { apiRequest } from './client'
 
 export const attemptKeys = {
-  all: ['myAssessments'],
+  all: ({page, limit, status, search}) => ['myAssessments', page, limit, status, search],
 }
 
-export async function listMyAssessments() {
-  const response = await apiRequest('/candidate/assessments')
+export async function listMyAssessments({ page = 1, limit = 100, status = ''}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (status) params.set('status', status)
+  const response = await apiRequest(`/candidate/assessments?${params.toString()}`)
   return response.data
 }
 

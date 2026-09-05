@@ -37,3 +37,12 @@ export async function deleteCandidate(id) {
   const response = await apiRequest(`/admin/candidates/${id}`, { method: 'DELETE' })
   return response.data
 }
+
+export const submissionKeys = {
+  detail: (assignmentId, candidateId) => ['submissions', assignmentId, candidateId],
+}
+
+export async function getSubmission(assignmentId, candidateId) {
+  const response = await apiRequest(`/candidate/assignments/${assignmentId}/candidate/${candidateId}/attempt`)
+  return response.data
+}
