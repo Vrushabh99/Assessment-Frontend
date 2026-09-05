@@ -9,7 +9,8 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { TextField } from '../../../components/ui/TextField'
 import { NumberField } from '../../../components/ui/NumberField'
-
+import { QuestionRenderer } from '../../../components/QuestionRenderer'
+import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 const Container = styled.div`
   display: grid;
   gap: 24px;
@@ -91,14 +92,16 @@ const AnswerSection = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   padding: 16px;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin: 8px 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
   border: 1px solid ${({ theme }) => theme.colors.border};
 `
 
 const AnswerLabel = styled.div`
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.muted};
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -113,30 +116,33 @@ const AnswerContent = styled.div`
 
 const GradingSection = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  padding: 16px;
+  padding: 8px;
   border-radius: 8px;
-  border: 2px solid ${({ theme }) => theme.colors.primary};
-  display: grid;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  display: flex;
+  margin-top: 8px;
   gap: 12px;
-`
-
-const GradingLabel = styled.label`
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.text};
 `
 
 const FormRow = styled.div`
-  display: grid;
+  display: flex;
+  width: 100%;
   gap: 12px;
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
+  justify-content: flex-end;
+  input {
+    padding: 6px;
+    width: 80px;
   }
 `
 
+const ScoreWrapper = styled.div`
+  display: flex;
+  font-size: 16px;
+  align-items: center;
+`
 const ButtonGroup = styled.div`
   display: flex;
   gap: 12px;
-  margin-top: 16px;
   @media (max-width: 640px) {
     flex-direction: column;
   }
@@ -187,9 +193,28 @@ const formatDate = (value) => {
     : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })
 }
 
+const StatusPill = ({ submission }) => {
+  const { status, isFullyScored } = submission;
+  let tone;
+  let label;
+  console.log(status);
+  switch(status) {
+    case 'submitted': { tone = 'success'; label = isFullyScored ? 'Graded' : 'Submitted'; break; }
+    case 'assigned' : { tone = 'warning'; label = 'Not Started'; break; }
+    default: tone = 'warning'; label = 'In Progress';
+  }
+ 
+  return(
+    <Pill
+      tone={tone}
+    >
+      {label}
+    </Pill>
+  )
+}
 export function SubmissionViewPage() {
   const navigate = useNavigate()
-  const { submissionId } = useParams()
+  const { assignmentId, candidateId } = useParams()
   const location = useLocation()
   const isGradingMode = location.pathname.includes('/grade')
 
@@ -198,14 +223,14 @@ export function SubmissionViewPage() {
   const queryClient = useQueryClient()
 
   const submissionQuery = useQuery({
-    queryKey: submissionKeys.detail(submissionId),
-    queryFn: () => getSubmission(submissionId),
+    queryKey: submissionKeys.detail( assignmentId, candidateId),
+    queryFn: () => getSubmission(assignmentId, candidateId),
   })
 
   const gradeMutation = useMutation({
     mutationFn: (gradeInfo) => updateSubmissionGrade(gradeInfo),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: submissionKeys.detail(submissionId) })
+      queryClient.invalidateQueries({ queryKey: submissionKeys.detail(assignmentId, candidateId) })
       setSuccessMessage('Grade saved successfully!')
       setTimeout(() => setSuccessMessage(''), 3000)
     },
@@ -227,6 +252,7 @@ export function SubmissionViewPage() {
     )
   }
 
+
   const submission = submissionQuery.data
   const pageTitle = isGradingMode ? 'Grade Submission' : 'View Submission'
 
@@ -235,10 +261,9 @@ export function SubmissionViewPage() {
     if (!data) return
 
     await gradeMutation.mutateAsync({
-      submissionId,
+      attemptId: submission.attemptId,
       questionId,
-      score: data.score,
-      feedback: data.feedback,
+      score: parseInt(data.score, 10),
     })
   }
 
@@ -260,9 +285,9 @@ export function SubmissionViewPage() {
             <HeaderContent>
               <h2>{isGradingMode ? 'Grade Submission' : 'View Submission'}</h2>
               <MetadataRow>
-                <Pill tone={submission.status === 'graded' ? 'success' : 'warning'}>
-                  {submission.status || 'submitted'}
-                </Pill>
+                <StatusPill
+                  submission={submission}
+                />
               </MetadataRow>
             </HeaderContent>
             <HeaderActions>
@@ -275,15 +300,17 @@ export function SubmissionViewPage() {
           <SubmissionInfo>
             <InfoItem>
               <InfoLabel>Student</InfoLabel>
-              <InfoValue>{submission.candidateName || 'Unknown'}</InfoValue>
+              <InfoValue>{submission.candidate.fullName || 'Unknown'}</InfoValue>
             </InfoItem>
             <InfoItem>
               <InfoLabel>Email</InfoLabel>
-              <InfoValue>{submission.candidateEmail || 'N/A'}</InfoValue>
+              <InfoValue>{submission.candidate.email || 'N/A'}</InfoValue>
             </InfoItem>
+          </SubmissionInfo>
+          <SubmissionInfo>
             <InfoItem>
               <InfoLabel>Assessment</InfoLabel>
-              <InfoValue>{submission.assessmentTitle || 'N/A'}</InfoValue>
+              <InfoValue>{submission.assessment.title || 'N/A'}</InfoValue>
             </InfoItem>
             <InfoItem>
               <InfoLabel>Submitted</InfoLabel>
@@ -293,7 +320,7 @@ export function SubmissionViewPage() {
               <InfoItem>
                 <InfoLabel>Score</InfoLabel>
                 <InfoValue>
-                  {submission.score} / {submission.totalPoints || 0}
+                  {submission.score} / {submission.total || 0}
                 </InfoValue>
               </InfoItem>
             )}
@@ -302,93 +329,70 @@ export function SubmissionViewPage() {
 
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
-        {submission.answers && submission.answers.length > 0 && (
+        {submission.questions && submission.questions.length > 0 && (
           <Card>
             <h3 style={{ marginTop: 0 }}>Responses</h3>
-            {submission.answers.map((answer, index) => (
-              <div key={answer.questionId || index}>
+            {submission.questions.map((question, index) => (
+              <div key={question.questionId || index}>
                 <QuestionBlock>
-                  <QuestionText>
-                    Q{index + 1}. {answer.questionText || 'Question'}
-                  </QuestionText>
+                  <QuestionRenderer
+                    question={question}
+                    mode={QUESTION_RENDERER_MODES.TEACHER}
+                    answer={question.answer ?? null}
+                  />
 
-                  <AnswerSection>
-                    <AnswerLabel>Student Answer</AnswerLabel>
-                    <AnswerContent>
-                      {answer.textAnswer || answer.selectedOptions?.join(', ') || 'No answer provided'}
-                    </AnswerContent>
-                  </AnswerSection>
-
-                  {answer.correctAnswer && (
+                  {question.correctAnswer && (
                     <AnswerSection>
                       <AnswerLabel>Correct Answer</AnswerLabel>
-                      <AnswerContent>{answer.correctAnswer}</AnswerContent>
+                      <AnswerContent>{question.correctAnswer}</AnswerContent>
                     </AnswerSection>
                   )}
 
-                  {isGradingMode && answer.questionType === 'short-text' && (
+                  {isGradingMode && question.type === 'short-answer' && question.answer && (
                     <GradingSection>
-                      <AnswerLabel>Grading</AnswerLabel>
                       <FormRow>
-                        <div>
-                          <GradingLabel>Score</GradingLabel>
+                        <ScoreWrapper>
                           <NumberField
-                            id={`score-${answer.questionId}`}
+                            id={`score-${question.questionId}`}
                             min="0"
-                            max={answer.maxScore || 10}
-                            value={gradingData[answer.questionId]?.score || ''}
+                            max={question.maxScore || 10}
+                            value={gradingData[question.questionId]?.score || question?.marksObtained}
                             onChange={(e) =>
-                              handleGradeChange(answer.questionId, 'score', e.target.value)
+                              handleGradeChange(question.questionId, 'score', e.target.value)
                             }
-                            placeholder="Enter score"
-                          />
-                        </div>
-                        <div>
-                          <GradingLabel>Max Score</GradingLabel>
-                          <Muted>{answer.maxScore || 10} points</Muted>
-                        </div>
-                      </FormRow>
-                      <div>
-                        <GradingLabel>Feedback</GradingLabel>
-                        <TextField
-                          id={`feedback-${answer.questionId}`}
-                          value={gradingData[answer.questionId]?.feedback || ''}
-                          onChange={(e) =>
-                            handleGradeChange(answer.questionId, 'feedback', e.target.value)
-                          }
-                          placeholder="Enter feedback for this answer"
-                          style={{ width: '100%' }}
-                        />
-                      </div>
+                            placeholder="Score"
+                            />
+                          /
+                          <Muted>{question.maxScore || 10} points</Muted>
+                        </ScoreWrapper>
                       <ButtonGroup>
                         <Button
-                          onClick={() => handleSaveGrade(answer.questionId)}
+                          onClick={() => handleSaveGrade(question.questionId)}
                           disabled={gradeMutation.isPending}
                         >
                           {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
                         </Button>
                       </ButtonGroup>
+                      </FormRow>
                     </GradingSection>
                   )}
 
-                  {answer.score !== undefined && (
+                  {question.score !== undefined && (
                     <AnswerSection>
-                      <AnswerLabel>Your Score</AnswerLabel>
+                      <AnswerLabel>Score</AnswerLabel>
                       <AnswerContent>
-                        {answer.score} / {answer.maxScore || 10}
+                        {question.score} / {question.points || 10}
                       </AnswerContent>
-                    </AnswerSection>
-                  )}
-
-                  {answer.feedback && (
-                    <AnswerSection>
-                      <AnswerLabel>Feedback</AnswerLabel>
-                      <AnswerContent>{answer.feedback}</AnswerContent>
+                      {!question.type === 'short-answer' && (
+                        <Pill tone={'warning'}>
+                          Auto-Scored
+                        </Pill>
+                      )}
                     </AnswerSection>
                   )}
                 </QuestionBlock>
 
-                {index < submission.answers.length - 1 && <Divider />}
+                {index < submission.questions.length - 1 && <Divider />}
               </div>
             ))}
           </Card>
