@@ -322,7 +322,7 @@ export function AttemptTakingPage() {
   
 
   if (stateQuery.isError && stateQuery.error.message === 'submitted') {
-    navigate(`/candidate/assignments/${assignmentId}`);
+    navigate(`/candidate/assignment/${assignmentId}`);
   }
 
   return (
