@@ -19,6 +19,7 @@ import { AttemptTakingPage } from '../pages/candidate/AttemptTakingPage'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { AuthProvider } from '../context/AuthContext'
 import { ResultViewPage } from '../pages/candidate/ResultViewPage'
+import { CandidateDetailsPage } from '../pages/admin/CandidateDetailsPage'
 
 export function AppRoutes() {
   return (
@@ -69,6 +70,10 @@ export function AppRoutes() {
         <Route
           path="/admin/candidates/:candidateId/edit"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><CandidateEditorPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/candidate/:candidateId/view"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><CandidateDetailsPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/questions"

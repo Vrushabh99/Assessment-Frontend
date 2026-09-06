@@ -64,6 +64,7 @@ export function CandidateManagementPage() {
   }
 
   const getMenuItems = (candidate) => [
+    { id: 'view', label: 'View', onClick: () => navigate(`/admin/candidate/${candidate._id}/view`) },
     { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/candidates/${candidate._id}/edit`) },
     { isDivider: true },
     { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(candidate._id) },

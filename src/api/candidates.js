@@ -3,6 +3,7 @@ import { apiRequest } from './client'
 export const candidateKeys = {
   all: ['candidates'],
   detail: (id) => ['candidates', id],
+  candidateAttempts: (id, page, limit, status) => ['candidate-attempts', id, page, limit, status],
 }
 
 export async function listCandidates({ page = 1, limit = 50, search = '' } = {}) {
@@ -14,6 +15,15 @@ export async function listCandidates({ page = 1, limit = 50, search = '' } = {})
 
 export async function getCandidate(id) {
   const response = await apiRequest(`/admin/candidates/${id}`)
+  return response.data
+}
+
+export async function getCandidateAttempts({ candidateId, page = 1, limit = 50, status = '' }) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (status) {
+    params.set('status', status);
+  }
+  const response = await apiRequest(`/admin/candidates/${candidateId}/attempt?${params.toString()}`)
   return response.data
 }
 
@@ -46,3 +56,4 @@ export async function getSubmission(assignmentId, candidateId) {
   const response = await apiRequest(`/candidate/assignments/${assignmentId}/candidate/${candidateId}/attempt`)
   return response.data
 }
+
