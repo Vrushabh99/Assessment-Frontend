@@ -10,7 +10,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { Pagination } from '../../../components/ui/Pagination'
-import { formatMinutes } from '../../../utils/helpers'
+import { formatDate, formatMinutes, isOlderTime } from '../../../utils/helpers'
 
 const Header = styled.div`
   display: flex;
@@ -71,20 +71,15 @@ const Metadata = styled.div`
   font-size: 0.85rem;
 `
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
-const statusTone = { active: 'success', cancelled: 'warning' }
+const statusTone = {
+  active: 'success',
+  cancelled: 'warning',
+  expired: 'warning',
+}
 
 const getAssignments = (data) => data?.assignments || data?.items || []
 
-const formatDate = (value) => {
-  if (!value) return 'No expiry'
 
-  const date = new Date(value)
-  if (date < new Date()) return 'Expired'
-
-  return Number.isNaN(date.getTime())
-    ? 'No expiry'
-    : `Expires ${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
-}
 
 export function AssignmentManagementPage() {
   const navigate = useNavigate()
@@ -134,8 +129,10 @@ export function AssignmentManagementPage() {
     const assessmentId = getAssessmentId(assignment)
     return [
       { id: 'details', label: 'View Submissions', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}`) },
-      { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assessments/${assessmentId}/assign?edit`) },
-      { id: 'preview', label: 'Preview', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
+      { id: 'edit', label: 'Edit / Assign', onClick: () => navigate(`/admin/assessments/${assessmentId}/assign?edit`) },
+      { id: 'preview', label: 'Preview', onClick: () => { assessmentId && 
+        window.open(`/admin/assessments/${assessmentId}/preview`, '_blank', 'noopener,noreferrer')    
+      }},
       { isDivider: true },
       { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assignment._id || assignment.id) },
     ]
@@ -154,8 +151,26 @@ export function AssignmentManagementPage() {
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="assignment-search" aria-label="Search assignments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <DropDown id="assignment-status-filter" aria-label="Filter assignments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'cancelled', label: 'Cancelled' }]} />
+          <TextField id="assignment-search" aria-label="Search assignments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{'width': 270}}/>
+          <DropDown
+            id="assignment-status-filter"
+            aria-label="Filter assignments by status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            options={[{
+              value: 'all',
+              label: 'All statuses' 
+            },
+            {
+              value: 'active',
+              label: 'Active'
+            },
+            {
+              value: 'expired',
+              label: 'Expired'
+            }]}
+            style={{'width': 200}}
+          />
         </Toolbar>
         {query.isLoading && <CommonLoader label="Loading assignments..." />}
         {query.isError && <EmptyState role="alert">{query.error.message}</EmptyState>}
@@ -165,19 +180,20 @@ export function AssignmentManagementPage() {
             const assessment = assignment.assessmentId || assignment.assessment || {}
             const totalPoints = assessment.totalPoints ?? assignment.totalPoints ?? '-'
             const expiresAt = formatDate(assignment.expiresAt);
+            const isExpired = isOlderTime(assignment.expiresAt);
             return (
               <AssignmentCard key={assignment._id || assignment.id}>
                 <AssignmentContent>
                   <AssignmentTitleRow>
                     <AssignmentTitle>{assessment.title || assignment.assessmentTitle || 'Untitled assessment'}</AssignmentTitle>
-                    <Pill tone={statusTone[assignment.status] || 'neutral'}>{assignment.status || 'active'}</Pill>
+                    <Pill tone={statusTone[isExpired ? 'expired' : assignment.status] || 'neutral'}>{isExpired ? 'expired' : 'active'}</Pill>
                   </AssignmentTitleRow>
                   {assignment.description && <AssignmentDescription>{assignment.description}</AssignmentDescription>}
                   <Metadata>
-                    <Pill tone="neutral">{assignment.studentCount ?? 0} students</Pill>
-                    <Pill tone="neutral">Duration: {formatMinutes(assignment.durationMinutes)}</Pill>
-                    <Pill tone={expiresAt === 'Expired' ? "warning" :"neutral"}>{expiresAt}</Pill>
-                    <Pill tone="neutral">Score: {assignment.score ?? totalPoints}</Pill>
+                    <Pill tone="info">{assignment.studentCount ?? 0} students</Pill>
+                    <Pill tone="warning">Duration: {formatMinutes(assignment.durationMinutes)}</Pill>
+                    {expiresAt !== '-' && (<Pill tone="neutral">Expires at: {expiresAt}</Pill>)}
+                    <Pill tone="info">Max Score: {totalPoints}</Pill>
                   </Metadata>
                 </AssignmentContent>
                 <CardActions>

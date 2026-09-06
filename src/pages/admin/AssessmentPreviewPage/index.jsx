@@ -9,6 +9,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 import { AssessmentHeader, HeaderActions, HeaderContent } from './styles'
+import { Timer } from '../../../components/ui/Timer'
 
 const Card = styled.section`
   padding: 24px;
@@ -20,27 +21,26 @@ const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
 const Meta = styled.div`display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 24px;`
 const QuestionList = styled.div`display: grid; gap: 16px;`
 
-export function AssessmentDetailsPage() {
-  const navigate = useNavigate()
+export function AssessmentPreviewPage() {
   const { assessmentId } = useParams()
   const query = useQuery({ queryKey: assessmentKeys.detail(assessmentId), queryFn: () => getAssessment(assessmentId) })
   if (query.isLoading) return <DashboardLayout title="Assessment details" role="Administrator"><CommonLoader label="Loading assessment..." /></DashboardLayout>
   if (query.isError) return <DashboardLayout title="Assessment details" role="Administrator"><Muted role="alert">{query.error.message}</Muted></DashboardLayout>
   const assessment = query.data
   return (
-    <DashboardLayout title="Assessment details" role="Administrator">
+    <DashboardLayout title="Assessment details" role="Administrator" hideNavigation>
       <Card>
         <AssessmentHeader>
           <HeaderContent>
             <h2>{assessment.title}</h2>
             <Pill tone="warning">Preview</Pill>
           </HeaderContent>
+          <Timer minutes={20} active onExpire={() => {}} />
           <HeaderActions>
-            <Button type="button" variant="secondary" onClick={() => navigate(`/admin/assessments/${assessmentId}/edit`)}>Edit</Button>
+            <Button type="button" variant="primary" onClick={() => {}}>Submit</Button>
           </HeaderActions>
         </AssessmentHeader>
         <Meta>
-          <Pill tone={assessment.status === 'published' ? 'success' : 'warning'}>{assessment.status}</Pill>
           <Muted>{assessment.questionIds.length} questions</Muted>
           <Muted>{assessment.totalPoints} total points</Muted>
         </Meta>

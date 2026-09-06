@@ -92,7 +92,9 @@ export function AssessmentManagementPage() {
 
   const getMenuItems = (assessment) => [
     { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assessments/${assessment._id}/edit`) },
-    { id: 'view', label: 'View', onClick: () => navigate(`/admin/assessments/${assessment._id}`) },
+    { id: 'view', label: 'Preview', onClick: () => {
+      window.open(`/admin/assessments/${assessment._id}/preview`, '_blank', 'noopener,noreferrer')    
+    }},
     { id: 'assign', label: 'Assign', disabled: assessment.status !== 'published', onClick: () => navigate(`/admin/assessments/${assessment._id}/assign`) },
     { isDivider: true },
     { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id) },
@@ -109,8 +111,8 @@ export function AssessmentManagementPage() {
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <DropDown id="assessment-status-filter" aria-label="Filter assessments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} />
+          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{'width': 270}}/>
+          <DropDown id="assessment-status-filter" aria-label="Filter assessments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} style={{'width': 200}}/>
         </Toolbar>
         {assessmentsQuery.isLoading && <CommonLoader label="Loading assessments..." />}
         {assessmentsQuery.isError && <EmptyState role="alert">{assessmentsQuery.error.message}</EmptyState>}

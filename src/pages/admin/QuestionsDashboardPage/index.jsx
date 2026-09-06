@@ -74,9 +74,9 @@ export function QuestionsDashboardPage() {
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="question-search" aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <DropDown id="question-type-filter" aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)} options={[{ value: 'all', label: 'All types' }, { value: 'single-choice', label: 'Single choice' }, { value: 'multiple-choice', label: 'Multiple choice' }, { value: 'short-answer', label: 'Short answer' }]} />
-          <DropDown id="question-status-filter" aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }]} />
+          <TextField id="question-search" aria-label="Search questions" placeholder="Search by question or ID" value={search} onChange={(event) => setSearch(event.target.value)} style={{'width': 270}}/>
+          <DropDown id="question-type-filter" aria-label="Filter by question type" value={type} onChange={(event) => setType(event.target.value)} options={[{ value: 'all', label: 'All types' }, { value: 'single-choice', label: 'Single choice' }, { value: 'multiple-choice', label: 'Multiple choice' }, { value: 'short-answer', label: 'Short answer' }]} style={{'width': 200}}/>
+          <DropDown id="question-status-filter" aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }]} style={{'width': 150}}/>
         </Toolbar>
         <QuestionTable questions={filteredQuestions} onEdit={(question) => navigate(`/admin/questions/${question.id}/edit`)} />
         <Pagination

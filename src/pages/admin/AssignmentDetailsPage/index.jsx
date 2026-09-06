@@ -11,6 +11,9 @@ import { Menu } from '../../../components/ui/Menu'
 import { TextField } from '../../../components/ui/TextField'
 import { DropDown } from '../../../components/ui/DropDown'
 import { Pagination } from '../../../components/ui/Pagination'
+import { formatDate, formatMinutes } from '../../../utils/helpers'
+
+const TABLE_BREAKPOINT = '768px'
 
 const Container = styled.div`
   display: grid;
@@ -81,10 +84,17 @@ const Toolbar = styled.div`
   }
 `
 
+// Table view — desktop/tablet only. Below TABLE_BREAKPOINT we switch to
+// CandidateList (a stack of Cards) instead of horizontally scrolling a
+// cramped table.
 const StudentsTable = styled.div`
   overflow-x: auto;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 8px;
+
+  @media (max-width: ${TABLE_BREAKPOINT}) {
+    display: none;
+  }
 `
 
 const Table = styled.table`
@@ -118,6 +128,47 @@ const Table = styled.table`
   }
 `
 
+// Card view — shown only below TABLE_BREAKPOINT, one Card per candidate.
+const CandidateList = styled.div`
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (max-width: ${TABLE_BREAKPOINT}) {
+    display: flex;
+  }
+`
+
+const CandidateCard = styled(Card)`
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+`
+
+const CandidateCardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+`
+
+const CandidateCardMeta = styled.div`
+  display: grid;
+  gap: 6px;
+`
+
+const CandidateCardMetaRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+`
+
+const CandidateCardFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`
+
 const StudentName = styled.div`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
@@ -131,11 +182,6 @@ const StudentEmail = styled.div`
 const ScoreCell = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.primary};
-`
-
-const StatusBadge = styled.div`
-  display: inline-block;
-  text-transform: uppercase;
 `
 
 const ActionsCell = styled.div`
@@ -182,22 +228,14 @@ const InfoValue = styled.span`
   font-weight: 600;
 `
 
-const statusTone = {
-  submitted: 'success',
-  pending: 'neutral',
-  in_progress: 'warning',
-  graded: 'success',
-}
+const ActionsWrapper = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: 100%;
+`;
 
-const getStatusTone = (status) => statusTone[status] || 'neutral'
-
-const formatDate = (value) => {
-  if (!value) return 'N/A'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? 'N/A'
-    : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })
-}
 
 const StatusPill = ({ submission }) => {
   const { status, isFullyScored } = submission;
@@ -314,39 +352,43 @@ export function AssignmentDetailsPage() {
               >
                 Back
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() => navigate(`/admin/assessments/${assessment._id || assessment.id}`)}
-              >
-                View Assessment
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => navigate(`/admin/assignments/${assignmentId}/edit`)}
-              >
-                Edit
-              </Button>
             </HeaderActions>
           </Header>
 
           <AssessmentInfo>
             <InfoRow>
               <div>
-                <InfoLabel>Duration:</InfoLabel>
-                <InfoValue>{assignment.durationMinutes || 0} minutes</InfoValue>
+                <InfoLabel>Duration: </InfoLabel>
+                <InfoValue>{formatMinutes(assignment.durationMinutes || 0)}</InfoValue>
               </div>
               <div>
-                <InfoLabel>Total Points:</InfoLabel>
+                <InfoLabel>Total Points: </InfoLabel>
                 <InfoValue>{assessment.totalPoints || 0} points</InfoValue>
               </div>
               <div>
-                <InfoLabel>Questions:</InfoLabel>
+                <InfoLabel>Questions: </InfoLabel>
                 <InfoValue>{assessment.questionIds?.length || 0}</InfoValue>
               </div>
               <div>
-                <InfoLabel>Expires:</InfoLabel>
+                <InfoLabel>Expires: </InfoLabel>
                 <InfoValue>{formatDate(assignment.expiresAt)}</InfoValue>
               </div>
+              <ActionsWrapper>
+                <Button
+                variant="primary"
+                onClick={() => {
+                  window.open(`/admin/assessments/${assessment._id}/preview`, '_blank', 'noopener,noreferrer')
+                }}
+              >
+                View Assessment
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => navigate(`/admin/assignments/${assignmentId}/edit`)}
+              >
+                Edit
+              </Button>
+              </ActionsWrapper>
             </InfoRow>
           </AssessmentInfo>
 
@@ -407,6 +449,7 @@ export function AssignmentDetailsPage() {
 
           {!candidatesQuery.isLoading && !candidatesQuery.isError && displayedCandidates.length > 0 && (
             <>
+              {/* Desktop/tablet: table */}
               <StudentsTable>
                 <Table>
                   <thead>
@@ -454,6 +497,44 @@ export function AssignmentDetailsPage() {
                   </tbody>
                 </Table>
               </StudentsTable>
+
+              {/* Mobile: one Card per candidate instead of a cramped/scrolling table */}
+              <CandidateList>
+                {displayedCandidates.map((candidate) => (
+                  <CandidateCard key={candidate.submissionId}>
+                    <CandidateCardHeader>
+                      <div>
+                        <StudentName>{candidate.fullName}</StudentName>
+                        <StudentEmail>{candidate.email}</StudentEmail>
+                      </div>
+                      <StatusPill submission={candidate} />
+                    </CandidateCardHeader>
+
+                    <CandidateCardMeta>
+                      <CandidateCardMetaRow>
+                        <Muted>Score</Muted>
+                        {candidate.isFullyScored && candidate.score !== undefined ? (
+                          <ScoreCell>
+                            {candidate.score ?? '-'} / {assessment.totalPoints || 0}
+                          </ScoreCell>
+                        ) : (
+                          <Muted>Not graded</Muted>
+                        )}
+                      </CandidateCardMetaRow>
+                      <CandidateCardMetaRow>
+                        <Muted>Submitted</Muted>
+                        <Muted>
+                          {candidate.submittedAt ? formatDate(candidate.submittedAt) : 'Not submitted'}
+                        </Muted>
+                      </CandidateCardMetaRow>
+                    </CandidateCardMeta>
+
+                    <CandidateCardFooter>
+                      <Menu trigger="⋮" items={getMenuItems(candidate)} />
+                    </CandidateCardFooter>
+                  </CandidateCard>
+                ))}
+              </CandidateList>
 
               {(candidatesQuery.data?.pagination?.totalPages || 1) > 1 && (
                 <Pagination
