@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
 import { getAssignment, assignmentKeys, listAssignmentCandidates } from '../../../api/assignments'
@@ -12,6 +12,8 @@ import { TextField } from '../../../components/ui/TextField'
 import { DropDown } from '../../../components/ui/DropDown'
 import { Pagination } from '../../../components/ui/Pagination'
 import { formatDate, formatMinutes } from '../../../utils/helpers'
+import { resetCandidateAttempt } from '../../../api/submissions'
+import { Alert, Snackbar } from '@mui/material'
 
 const TABLE_BREAKPOINT = '768px'
 
@@ -260,11 +262,14 @@ export function AssignmentDetailsPage() {
   const navigate = useNavigate()
   const { assignmentId } = useParams()
   const [searchInput, setSearchInput] = useState('')
+  const [ snackbar, setSnackbar] = useState({ open: false, message: ''})
+  const [ currentCandidate, setCurrentCandidate] = useState(null);
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-
+  const queryClient = useQueryClient()
+  
   // Debounce search input (500ms delay)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -291,6 +296,15 @@ export function AssignmentDetailsPage() {
     }),
   })
 
+
+  const resetMutation = useMutation({
+    mutationFn: (data) => resetCandidateAttempt(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter })})
+      setSnackbar({ open: true, message: `Attempt resetted for ${currentCandidate.fullName}.`})
+    },
+  })
+
   if (assignmentQuery.isLoading) {
     return (
       <DashboardLayout title="Assignment details" role="Administrator">
@@ -311,6 +325,11 @@ export function AssignmentDetailsPage() {
   const assessment = assignment?.assessmentId || assignment?.assessment || {}
   const displayedCandidates = candidatesQuery.data?.candidates || []
 
+  const handleReset = async (candidate) => {
+    const { attemptId, fullName } = candidate;
+    setCurrentCandidate({ fullName });
+    await resetMutation.mutateAsync({ attemptId })
+  }
   const getMenuItems = (candidate) => [
     {
       id: 'view',
@@ -327,6 +346,12 @@ export function AssignmentDetailsPage() {
       onClick: () => {
         navigate(`/admin/submissions/${assignment._id}/${candidate.id}/grade`)
       },
+    },
+    {
+      id: 'reset',
+      label: 'Reset Response',
+      disabled: ['assigned'].includes(candidate.status),
+      onClick: () => handleReset(candidate),
     },
   ]
 
@@ -547,6 +572,17 @@ export function AssignmentDetailsPage() {
           )}
         </Card>
       </Container>
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => {
+          setCurrentCandidate(null);
+          setSnackbar((current) => ({ ...current, open: false }))}
+        }
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
+      </Snackbar>
     </DashboardLayout>
   )
 }

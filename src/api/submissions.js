@@ -16,3 +16,10 @@ export async function updateSubmissionGrade({ attemptId, questionId, score }) {
   })
   return response.data
 }
+
+export async function resetCandidateAttempt({ attemptId }) {
+  const response = await apiRequest(`/admin/attempts/${attemptId}/reset`, {
+    method: 'PATCH',
+  })
+  return response.data
+}
