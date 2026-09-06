@@ -7,7 +7,8 @@ const getInfo = (question) => question.additionalInfo || {}
 const getOptions = (question) => getInfo(question).options || []
 const getCorrectAnswers = (question) => getInfo(question).correctAnswers || []
 const isTeacherMode = (mode) => mode === QUESTION_RENDERER_MODES.TEACHER
-const isReadOnly = (mode) => isTeacherMode(mode) || mode === QUESTION_RENDERER_MODES.PREVIEW
+const isReadOnly = (mode) => isTeacherMode(mode)
+const isPreview = (mode) => mode === QUESTION_RENDERER_MODES.PREVIEW
 
 function isSelected(answer, index) {
   return Array.isArray(answer) ? answer.includes(index) : answer === index
@@ -33,6 +34,7 @@ export function QuestionRenderer({
   const currentAnswer = answer === undefined ? localAnswer : answer
   const teacherMode = isTeacherMode(mode)
   const readOnly = isReadOnly(mode)
+  const preview = isPreview(mode)
   const correctAnswers = getCorrectAnswers(question)
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function QuestionRenderer({
   }, [answer])
 
   const updateAnswer = (nextAnswer) => {
-    if (readOnly) return
+    if (readOnly || preview) return
     setLocalAnswer(nextAnswer)
     onAnswer?.(nextAnswer)
   }
