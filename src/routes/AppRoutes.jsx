@@ -4,7 +4,7 @@ import { ROLES } from '../constants/roles'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AssessmentManagementPage } from '../pages/admin/AssessmentManagementPage'
 import { AssessmentEditorPage } from '../pages/admin/AssessmentEditorPage'
-import { AssessmentDetailsPage } from '../pages/admin/AssessmentDetailsPage'
+import { AssessmentPreviewPage } from '../pages/admin/AssessmentPreviewPage'
 import { AssignAssessmentPage } from '../pages/admin/AssignAssessmentPage'
 import { AssignmentManagementPage } from '../pages/admin/AssignmentManagementPage'
 import { AssignmentDetailsPage } from '../pages/admin/AssignmentDetailsPage'
@@ -43,8 +43,8 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssessmentEditorPage /></ProtectedRoute>}
         />
         <Route
-          path="/admin/assessments/:assessmentId"
-          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssessmentDetailsPage /></ProtectedRoute>}
+          path="/admin/assessments/:assessmentId/preview"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssessmentPreviewPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/assessments/:assessmentId/assign"
@@ -95,11 +95,11 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><CandidateDashboardPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assignments/:assignmentId"
+          path="/candidate/assignment/:assignmentId"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AssessmentAttemptPage /></ProtectedRoute>}
         />
         <Route
-          path="/candidate/assignments/:assignmentId/attempt"
+          path="/candidate/assignment/:assignmentId/attempt"
           element={<ProtectedRoute allowedRole={ROLES.CANDIDATE}><AttemptTakingPage /></ProtectedRoute>}
         />
         <Route
