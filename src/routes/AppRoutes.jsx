@@ -59,10 +59,6 @@ export function AppRoutes() {
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssignmentDetailsPage /></ProtectedRoute>}
         />
         <Route
-          path="/admin/assignments/:assignmentId/edit"
-          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssignAssessmentPage /></ProtectedRoute>}
-        />
-        <Route
           path="/admin/candidates"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><CandidateManagementPage /></ProtectedRoute>}
         />

@@ -20,8 +20,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '../../../api/client'
-import { assessmentKeys, getAssessment } from '../../../api/assessments'
-import { assignAssessment, assignmentKeys, getAssignment, updateAssignment } from '../../../api/assignments'
+import { assignAssessment, assignmentKeys, getAssignmentByAssessment, updateAssignment } from '../../../api/assignments'
 import { candidateKeys, listCandidates } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
@@ -51,14 +50,13 @@ const normalizeCandidates = (payload) => {
 
 export function AssignAssessmentPage() {
   const navigate = useNavigate()
-  const { assessmentId, assignmentId } = useParams()
-  const isEdit = Boolean(assignmentId)
+  const { assessmentId } = useParams()
 
-  const assignmentQuery = useQuery({
-    queryKey: assignmentKeys.detail(assignmentId),
-    queryFn: () => getAssignment(assignmentId),
-    enabled: isEdit,
+  const Query = useQuery({
+    queryKey: assignmentKeys['assessment-assignment'](assessmentId),
+    queryFn: () => getAssignmentByAssessment(assessmentId),
   })
+
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([])
   const [candidatePage, setCandidatePage] = useState(1)
   const [candidateSearch, setCandidateSearch] = useState('')
@@ -72,23 +70,14 @@ export function AssignAssessmentPage() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [step, setStep] = useState(0)
 
-  const assignmentResponse = assignmentQuery.data
-  const assignment = assignmentResponse?.assignment || assignmentResponse
-  const assignmentStudents = assignmentResponse?.assignedCandidates
 
-  const assignedAssessment = assignment?.assessmentId
-  const assessmentIdForQuery = isEdit ? undefined : assessmentId
+  const {
+    assessment = {},
+    assignment = {},
+    assignedCandidates = [],
+  } = Query?.data || {};
 
-  const assessmentQuery = useQuery({
-    queryKey: assessmentKeys.detail(assessmentIdForQuery),
-    queryFn: () => getAssessment(assessmentIdForQuery),
-    enabled: Boolean(assessmentIdForQuery),
-  })
-
-  const assessment = isEdit
-    ? assignedAssessment
-    : assessmentQuery.data?.assessment || assessmentQuery.data
-
+  const isEdit = Boolean(assignment._id)
   const candidatesQuery = useQuery({
     queryKey: [...candidateKeys.all, { search: candidateSearch }],
     queryFn: () => listCandidates({ search: candidateSearch, limit: 100 }),
@@ -108,9 +97,9 @@ export function AssignAssessmentPage() {
     setExpiresAt(toDateTimeInput(assignment.expiresAt))
     setDescription(assignment.description || '')
     setViolationLimits({ ...defaultViolationLimits, ...assignment.violationLimits })
-    setSelectedCandidateIds(assignmentStudents)
+    setSelectedCandidateIds(assignedCandidates)
 
-  }, [assignment, assignmentStudents, isEdit])
+  }, [assignment, assignedCandidates, isEdit])
 
   const validateConfiguration = () => {
     const nextErrors = {}
@@ -146,7 +135,7 @@ export function AssignAssessmentPage() {
       }
 
       // Collect existing candidate IDs safely from ID strings or object models
-      const existingIds = new Set((assignmentStudents || []))
+      const existingIds = new Set((assignedCandidates || []))
       const newCandidateIds = selectedCandidateIds.filter((id) => !existingIds.has(id))
 
       // Check if assignment properties actually changed
@@ -160,15 +149,15 @@ export function AssignAssessmentPage() {
       let response
       if (isEdit) {
         if (hasPropertyChanges) {
-          response = await updateAssignment({ id: assignmentId, ...payload })
+          response = await updateAssignment({ id: assignment._id, ...payload })
         } else {
           response = { data: assignment }
         }
 
         if (newCandidateIds.length > 0) {
           response = await assignAssessment({
-            assessmentId: assignedAssessment?._id || assignedAssessment?.id || assignedAssessment,
-            assignmentId,
+            assessmentId: assessment?._id,
+            assignmentId: assignment._id,
             ...payload,
             candidateIds: newCandidateIds,
           })
@@ -203,11 +192,11 @@ export function AssignAssessmentPage() {
             <p>{isEdit ? 'Update assignment settings and add candidates.' : 'Select candidates and configure assessment access.'}</p>
           </div>
         </FormHeader>
-        {(assessmentQuery.isLoading || assignmentQuery.isLoading) && (
+        {(Query.isLoading) && (
           <CommonLoader label={isEdit ? 'Loading assignment...' : 'Loading assessment details...'} />
         )}
-        {(assessmentQuery.isError || assignmentQuery.isError) && (
-          <Typography color="error">{(assessmentQuery.error || assignmentQuery.error).message}</Typography>
+        {(Query.isError) && (
+          <Typography color="error">{(Query.error).message}</Typography>
         )}
         {assessment && (
           <Summary aria-label="Assessment summary">

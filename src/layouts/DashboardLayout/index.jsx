@@ -78,20 +78,20 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
         </Topbar>
         {!hideNavigation && (
           <>
-        <PageHeading>
-          <Eyebrow>{role} workspace</Eyebrow>
-        </PageHeading>
-          <Navigation aria-label="Workspace navigation">
-          {role === 'Administrator' && (
-            <>
-              <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
-              <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
-              <NavigationLink to="/admin/questions">Questions</NavigationLink>
-              <NavigationLink to="/admin/candidates">Candidates</NavigationLink>
-            </>
-          )
-        }
-        </Navigation>
+            <PageHeading>
+              <Eyebrow>{role} workspace</Eyebrow>
+            </PageHeading>
+            <Navigation aria-label="Workspace navigation">
+              {role === 'Administrator' && (
+                <>
+                  <NavigationLink to="/admin" end>Dashboard</NavigationLink>
+                  <NavigationLink to="/admin/assignments">Assignments</NavigationLink>
+                  <NavigationLink to="/admin/assessments">Assessments</NavigationLink>
+                  <NavigationLink to="/admin/questions">Questions</NavigationLink>
+                  <NavigationLink to="/admin/candidates">Candidates</NavigationLink>
+                </>
+              )}
+            </Navigation>
         </>
           )}
         <Content>{children}</Content>

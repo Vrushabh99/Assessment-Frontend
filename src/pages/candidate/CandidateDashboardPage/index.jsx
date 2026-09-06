@@ -65,6 +65,7 @@ const Metadata = styled.div`
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
 const TabList = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 0;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
@@ -81,7 +82,7 @@ const Tab = styled.button`
   border-bottom: 3px solid ${({ theme, $active }) => $active ? theme.colors.primary : 'transparent'};
   transition: all 0.2s ease;
   white-space: nowrap;
-
+  max-width: 100px;
   &:hover {
     color: ${({ theme }) => theme.colors.primary};
     background: ${({ theme }) => theme.colors.background};

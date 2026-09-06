@@ -84,6 +84,7 @@ export const Eyebrow = styled.p`
 
 export const Navigation = styled.nav`
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 0 0 28px;
   overflow-x: auto;

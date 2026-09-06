@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
@@ -63,13 +63,23 @@ export function AssessmentManagementPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const limit = 20
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timeout)
+  }, [search])
+  
+  useEffect(() => setPage(1), [debouncedSearch])
+  
   const assessmentsQuery = useQuery({
-    queryKey: [...assessmentKeys.all, { search, status, page, limit }],
-    queryFn: () => listAssessments({ page, limit, search, status: status === 'all' ? '' : status }),
+    queryKey: [...assessmentKeys.all, { search: debouncedSearch, status, page, limit }],
+    queryFn: () => listAssessments({ page, limit, search: debouncedSearch, status: status === 'all' ? '' : status }),
   })
+  
   const assessments = useMemo(() => assessmentsQuery.data?.assessments || [], [assessmentsQuery.data])
   const deleteMutation = useMutation({
     mutationFn: deleteAssessment,

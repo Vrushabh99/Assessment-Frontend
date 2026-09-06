@@ -3,13 +3,15 @@ import { apiRequest } from './client'
 export const assignmentKeys = {
   all: ['assignments'],
   detail: (id) => ['assignments', id],
+  'assessment-assignment': (id) => ['assessment-assignment', id],
   candidates: (id) => ['assignments', id, 'candidates'],
   candidatesWithParams: (id, params) => ['assignments', id, 'candidates', params],
 };
 
-export async function listAssignments({ page = 1, limit = 100, status = '' } = {}) {
+export async function listAssignments({ page = 1, limit = 100, status = '', search } = {}) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
   if (status) params.set('status', status)
+  if (search) params.set('search', search)
   const response = await apiRequest(`/admin/assignments?${params.toString()}`)
   return response.data
 }
@@ -26,6 +28,11 @@ export async function cancelAssignment(id) {
 
 export async function getAssignment(id) {
   const response = await apiRequest(`/admin/assignments/${id}`)
+  return response.data
+}
+
+export async function getAssignmentByAssessment(assessmentId) {
+  const response = await apiRequest(`/admin/assessments/${assessmentId}/assignment`)
   return response.data
 }
 

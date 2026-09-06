@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
@@ -89,12 +89,21 @@ export function AssignmentManagementPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const limit = 20
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timeout)
+  }, [search])
+  
+  useEffect(() => setPage(1), [debouncedSearch])
+
   const query = useQuery({
-    queryKey: [...assignmentKeys.all, { search, status, page, limit }],
-    queryFn: () => listAssignments({ search, page, limit, status: status === 'all' ? '' : status }),
+    queryKey: [...assignmentKeys.all, { search: debouncedSearch, status, page, limit }],
+    queryFn: () => listAssignments({ search: debouncedSearch, page, limit, status: status === 'all' ? '' : status }),
   })
   const deleteMutation = useMutation({
     mutationFn: deleteAssignment,
@@ -104,15 +113,8 @@ export function AssignmentManagementPage() {
     mutationFn: cancelAssignment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
   })
-  const assignments = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase()
-    return getAssignments(query.data).filter((assignment) => {
-      if (!normalizedSearch) return true
-      const assessment = assignment.assessmentId || assignment.assessment || {}
-      const title = assessment.title || assignment.assessmentTitle || ''
-      return title.toLowerCase().includes(normalizedSearch)
-    })
-  }, [query.data, search])
+
+  const assignments = query?.data?.assignments || [];
 
   const getAssessmentId = (assignment) => {
     const assessment = assignment?.assessmentId || assignment?.assessment
@@ -130,12 +132,10 @@ export function AssignmentManagementPage() {
   const getMenuItems = (assignment) => {
     const assessmentId = getAssessmentId(assignment)
     return [
-      { id: 'details', label: 'View Details', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}`) },
+      { id: 'details', label: 'View Submissions', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}`) },
+      { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assessments/${assessmentId}/assign?edit`) },
       { id: 'preview', label: 'Preview', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
-      { id: 'view', label: 'View', onClick: () => assessmentId && navigate(`/admin/assessments/${assessmentId}`) },
-      { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assignments/${assignment._id || assignment.id}/edit`) },
       { isDivider: true },
-      { id: 'cancel', label: 'Cancel', danger: true, disabled: deleteMutation.isPending, onClick: () => handleCancel(assignment._id || assignment.id) },
       { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assignment._id || assignment.id) },
     ]
   }
