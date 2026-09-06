@@ -18,10 +18,9 @@ import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
+import { Timer } from '../../../components/ui/Timer'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
-import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
-import { formatSeconds } from '../../../utils/helpers'
 
 const Layout = styled.div`display: grid; gap: 16px;`
 const Header = styled.div`
@@ -44,16 +43,6 @@ const ActionWrapper = styled.div`
   gap: 10px;
   align-items: center;
 `;
-const TimerDisplay = styled.div`
-  font-size: 1.4rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  padding: 8px 20px;
-  display: flex;
-  align-items: center;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ $warning, theme }) => ($warning ? '#b54708' : theme.colors.text)};
-`
 export const Card = styled.section`
   display: flex;
   justify-content: center;
@@ -90,21 +79,12 @@ export function AttemptTakingPage() {
   const queryClient = useQueryClient()
   const stateKey = candidateAssessmentKeys.detail(assignmentId)
   const [answers, setAnswers] = useState({})
-  const [remainingMs, setRemainingMs] = useState(null)
   const [savingIds, setSavingIds] = useState({})
   const [submitError, setSubmitError] = useState(null)
   const hasSubmittedRef = useRef(false)
-  const timerRef = useRef(null)
   const [snackbar, setSnackbar] = useState({ open: false })
   const [fullscreenReady, setFullscreenReady] = useState(() => Boolean(document.fullscreenElement))
   const [fullscreenError, setFullscreenError] = useState(null)
-
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [])
 
   const stateQuery = useQuery({
     queryKey: candidateAssessmentKeys.attempt( assignmentId),
@@ -154,45 +134,18 @@ export function AttemptTakingPage() {
     submitMutation.mutate()
   }, [submitMutation])
 
-  const handleSubmitRef = useRef(handleSubmit)
-  useEffect(() => {
-    handleSubmitRef.current = handleSubmit
-  }, [handleSubmit])
-
   const expiresAt = stateQuery.data?.expiresAt
   const serverTime = stateQuery.data?.serverTime
   const isSubmittedStatus = stateQuery.data?.status === 'submitted'
 
-  useEffect(() => {
-    if (!expiresAt || !serverTime || isSubmittedStatus) {
-      if (timerRef.current) clearInterval(timerRef.current)
-      return undefined
-    }
-
-    const initialServerMs = new Date(serverTime).getTime()
-    const expiresMs = new Date(expiresAt).getTime()
-    const startTime = Date.now()
-
-    const tick = () => {
-      const elapsed = Date.now() - startTime
-      const remaining = expiresMs - (initialServerMs + elapsed)
-      setRemainingMs(Math.max(0, remaining))
-
-      if (remaining <= 0) {
-        handleSubmitRef.current()
-      }
-    }
-
-    // Set immediately
-    tick()
-
-    // Update every second
-    timerRef.current = setInterval(tick, 1000)
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [expiresAt, serverTime, isSubmittedStatus])
+  // Timer takes a duration in minutes, so derive "minutes remaining right
+  // now" from the server-authoritative expiresAt/serverTime pair once per
+  // load — Timer then owns its own drift-resistant countdown from there.
+  const remainingMinutes = useMemo(() => {
+    if (!expiresAt || !serverTime) return null
+    const ms = new Date(expiresAt).getTime() - new Date(serverTime).getTime()
+    return Math.max(0, ms) / 60000
+  }, [expiresAt, serverTime])
 
   const saveAnswerMutation = useMutation({
     mutationFn: ({ question, answer }) => saveAnswer({  assignmentId, questionId: question._id, ...toApiAnswer(question, answer) }),
@@ -315,7 +268,6 @@ export function AttemptTakingPage() {
     }
   }, [stateQuery.data, reportViolation])
 
-  const isWarning = remainingMs !== null && remainingMs <= 5 * 60 * 1000
   const isSubmitted = stateQuery.data?.status === 'submitted'
 
   const needsFullscreenGate = Boolean(stateQuery.data) && !isSubmitted && !fullscreenReady;
@@ -353,11 +305,8 @@ export function AttemptTakingPage() {
               <Title>{stateQuery.data.assessment.title}</Title>
             </TitleBlock>
             <ActionWrapper>
-              {!isSubmitted && remainingMs !== null && (
-                <TimerDisplay $warning={isWarning} aria-label="Time remaining">
-                  <HourglassBottomIcon />
-                  {formatSeconds(remainingMs / 1000)}
-                </TimerDisplay>
+              {!isSubmitted && remainingMinutes !== null && (
+                <Timer minutes={remainingMinutes} active={!isSubmitted} onExpire={handleSubmit} />
               )}
             {!isSubmitted && (
             <Actions>

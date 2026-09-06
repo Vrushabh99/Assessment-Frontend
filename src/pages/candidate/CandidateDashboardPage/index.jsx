@@ -9,7 +9,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
 import { useAuth } from '../../../context/AuthContext'
-import { formatMinutes } from '../../../utils/helpers'
+import { formatDate, formatMinutes } from '../../../utils/helpers'
 
 const Header = styled.div`
   margin-bottom: 20px;
@@ -120,13 +120,6 @@ const TAB_FILTERS = [
   { id: 'expired', label: 'Expired', statuses: ['expired'] },
 ]
 
-const formatDate = (value) => {
-  if (!value) return 'No expiry'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? 'No expiry'
-    : `Expires ${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
-}
 
 const actionLabel = (assessment) => {
   if (!assessment.accessible) return 'Unavailable';
@@ -197,7 +190,7 @@ export function CandidateDashboardPage() {
 
     switch(label) {
         case 'Start':
-        case 'Resume': navigate(`/candidate/assignments/${assessment.assignmentId}`); break;
+        case 'Resume': navigate(`/candidate/assignment/${assessment.assignmentId}`); break;
         case 'Result': navigate(`/candidate/assignment/${assessment.assignmentId}/result`); break;
         case 'Unavailable': break;
         default: return;
@@ -228,7 +221,9 @@ export function CandidateDashboardPage() {
         {query.isError && <EmptyState role="alert">{query.error.message}</EmptyState>}
         {!query.isLoading && !query.isError && !assessments.length && <EmptyState>No assessments in this tab.</EmptyState>}
         <AssessmentList>
-          {assessments.map((assessment) => (
+          {assessments.map((assessment) => {
+            const expiresAt = formatDate(assessment.expiresAt)
+            return(
             <AssessmentCard key={assessment.attemptId}>
               <AssessmentContent>
                 <TitleRow>
@@ -240,7 +235,7 @@ export function CandidateDashboardPage() {
                 {assessment.description && <Description>{assessment.description}</Description>}
                 <Metadata>
                   <Pill tone="neutral">Duration: {formatMinutes(assessment.durationMinutes)}</Pill>
-                  <Pill tone="neutral">{formatDate(assessment.expiresAt)}</Pill>
+                  {expiresAt !== '-' && (<Pill tone="neutral">Expires at: {expiresAt}</Pill>)}
                   {assessment.status === 'submitted' && assessment.isFullyScored && <Pill tone="warning">Score: {assessment.score ?? '-'}</Pill>}
                 </Metadata>
               </AssessmentContent>
@@ -249,7 +244,7 @@ export function CandidateDashboardPage() {
                 handleOpen={(assessment, label) => handleOpen(assessment, label)}
               />
             </AssessmentCard>
-          ))}
+          )})}
         </AssessmentList>
       </Card>
     </DashboardLayout>
