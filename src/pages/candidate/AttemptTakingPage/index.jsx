@@ -12,6 +12,7 @@ import {
 import {
   Snackbar,
   Alert,
+  isEmpty,
 } from '@mui/material';
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -20,6 +21,7 @@ import { Button } from '../../../components/ui/Button'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
+import { formatSeconds } from '../../../utils/helpers'
 
 const Layout = styled.div`display: grid; gap: 16px;`
 const Header = styled.div`
@@ -52,19 +54,22 @@ const TimerDisplay = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   color: ${({ $warning, theme }) => ($warning ? '#b54708' : theme.colors.text)};
 `
+export const Card = styled.section`
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 28px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
+`
+
 const QuestionList = styled.div`display: grid; gap: 16px;`
 const SaveState = styled.span`font-size: 0.8rem; color: ${({ theme }) => theme.colors.muted};`
 const Actions = styled.div`display: flex; justify-content: flex-end; gap: 12px; align-items: center;`
 const ErrorState = styled.p`color: #b42318;`
 
-const formatSeconds = (totalSeconds) => {
-  const clamped = Math.max(0, Math.floor(totalSeconds))
-  const hours = Math.floor(clamped / 3600)
-  const minutes = Math.floor((clamped % 3600) / 60)
-  const seconds = clamped % 60
-
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-}
 
 const toApiAnswer = (question, answer) => {
   if (question.type === 'short-answer') return { textAnswer: answer ?? '' }
@@ -314,8 +319,15 @@ export function AttemptTakingPage() {
   const isSubmitted = stateQuery.data?.status === 'submitted'
 
   const needsFullscreenGate = Boolean(stateQuery.data) && !isSubmitted && !fullscreenReady;
+  
+
+  if (stateQuery.isError && stateQuery.error.message === 'submitted') {
+    navigate(`/candidate/assignments/${assignmentId}`);
+  }
+
   return (
     <DashboardLayout title="Assessment attempt" role="Candidate" hideNavigation>
+      <Card>
       {stateQuery.isLoading && <CommonLoader label="Loading assessment..." />}
       {stateQuery.isError && <ErrorState role="alert">{stateQuery.error.message}</ErrorState>}
       {submitError && <ErrorState role="alert">{submitError}</ErrorState>}
@@ -378,11 +390,20 @@ export function AttemptTakingPage() {
               </div>
             ))}
           </QuestionList>
+          {!isSubmitted && (
+            <Actions>
+              {submitMutation.isPending && <SaveState>Submitting...</SaveState>}
+              <Button type="button" onClick={handleSubmit} disabled={submitMutation.isPending}>
+                Submit
+              </Button>
+            </Actions>
+          )}
           <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>
             <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
           </Snackbar>
         </Layout>
       )}
+      </Card>
     </DashboardLayout>
   )
 }

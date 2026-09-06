@@ -10,6 +10,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { Pagination } from '../../../components/ui/Pagination'
+import { formatMinutes } from '../../../utils/helpers'
 
 const Header = styled.div`
   display: flex;
@@ -174,7 +175,7 @@ export function AssignmentManagementPage() {
                   {assignment.description && <AssignmentDescription>{assignment.description}</AssignmentDescription>}
                   <Metadata>
                     <Pill tone="neutral">{assignment.studentCount ?? 0} students</Pill>
-                    <Pill tone="neutral">{assignment.durationMinutes || 0} minutes</Pill>
+                    <Pill tone="neutral">Duration: {formatMinutes(assignment.durationMinutes)}</Pill>
                     <Pill tone={expiresAt === 'Expired' ? "warning" :"neutral"}>{expiresAt}</Pill>
                     <Pill tone="neutral">Score: {assignment.score ?? totalPoints}</Pill>
                   </Metadata>

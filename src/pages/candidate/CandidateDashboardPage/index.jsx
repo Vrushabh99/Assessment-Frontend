@@ -9,6 +9,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
 import { useAuth } from '../../../context/AuthContext'
+import { formatMinutes } from '../../../utils/helpers'
 
 const Header = styled.div`
   margin-bottom: 20px;
@@ -238,7 +239,7 @@ export function CandidateDashboardPage() {
                 </TitleRow>
                 {assessment.description && <Description>{assessment.description}</Description>}
                 <Metadata>
-                  <Pill tone="neutral">{assessment.durationMinutes || 0} minutes</Pill>
+                  <Pill tone="neutral">Duration: {formatMinutes(assessment.durationMinutes)}</Pill>
                   <Pill tone="neutral">{formatDate(assessment.expiresAt)}</Pill>
                   {assessment.status === 'submitted' && assessment.isFullyScored && <Pill tone="warning">Score: {assessment.score ?? '-'}</Pill>}
                 </Metadata>
