@@ -12,7 +12,6 @@ const TimerDisplay = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
   color: ${({ $warning, theme }) => ($warning ? '#b54708' : theme.colors.text)};
 `
 

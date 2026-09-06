@@ -5,8 +5,8 @@ export const AssessmentHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 8px;
-
+  padding: 20px;
+  background-color: ${({ theme }) => theme.colors.surface};
   h2 {
     margin: 0;
   }
@@ -30,9 +30,19 @@ export const HeaderActions = styled.div`
   align-items: center;
   gap: 10px;
   margin-left: auto;
-
+  justify-content: flex-end;
   @media (max-width: 560px) {
     width: 100%;
     margin-left: 0;
   }
 `
+
+export const Card = styled.section`
+  padding: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+`
+
+export const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
+export const Meta = styled.div`display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 24px;`
+export const QuestionList = styled.div`display: grid; gap: 16px;`

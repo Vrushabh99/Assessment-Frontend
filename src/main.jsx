@@ -4,6 +4,7 @@ import App from './App.jsx'
 import { GlobalStyle } from './styles/GlobalStyle'
 import { ThemeProvider } from 'styled-components'
 import { theme } from './styles/theme'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({

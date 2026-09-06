@@ -13,6 +13,7 @@ import {
   Snackbar,
   Alert,
   isEmpty,
+  AppBar,
 } from '@mui/material';
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -28,9 +29,8 @@ const Header = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 10px 20px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
   flex-wrap: wrap;
@@ -42,6 +42,7 @@ const ActionWrapper = styled.div`
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
 `;
 export const Card = styled.section`
   display: flex;
@@ -304,6 +305,8 @@ export function AttemptTakingPage() {
             <TitleBlock>
               <Title>{stateQuery.data.assessment.title}</Title>
             </TitleBlock>
+          </Header>
+            <AppBar position='sticky' color='tranparent' style={{width: 340, display: 'flex',justifyContent: 'flex-end', marginLeft: 'auto', background: '#ffffff', padding: '8px'}}>
             <ActionWrapper>
               {!isSubmitted && remainingMinutes !== null && (
                 <Timer minutes={remainingMinutes} active={!isSubmitted} onExpire={handleSubmit} />
@@ -318,7 +321,7 @@ export function AttemptTakingPage() {
           )}
             {isSubmitted && <Pill tone="success">Submitted</Pill>}
             </ActionWrapper>
-          </Header>
+            </AppBar>
 
           <QuestionList>
             {stateQuery.data.assessment.questions.map((question) => (
@@ -339,15 +342,7 @@ export function AttemptTakingPage() {
               </div>
             ))}
           </QuestionList>
-          {!isSubmitted && (
-            <Actions>
-              {submitMutation.isPending && <SaveState>Submitting...</SaveState>}
-              <Button type="button" onClick={handleSubmit} disabled={submitMutation.isPending}>
-                Submit
-              </Button>
-            </Actions>
-          )}
-          <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>
+          <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>
             <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
           </Snackbar>
         </Layout>
