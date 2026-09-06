@@ -21,6 +21,13 @@ function getAnswerLabel(question, answer) {
   return indexes.filter((index) => Number.isInteger(index) && options[index]).map((index) => options[index]).join(', ') || 'No answer'
 }
 
+function checkIsCorrect(question, answer, correctAnswers) {
+  if (question.type === 'short-answer') {
+    return String(answer || '').trim().toLowerCase() === String(getInfo(question).expectedAnswer || '').trim().toLowerCase()
+  }
+  return JSON.stringify([...(Array.isArray(answer) ? answer : [answer])].sort()) === JSON.stringify([...correctAnswers].sort())
+}
+
 /* eslint-disable react/prop-types */
 export function QuestionRenderer({
   question,
@@ -29,6 +36,7 @@ export function QuestionRenderer({
   onAnswer,
   score,
   onScore,
+  showCorrectAnswer = false,
 }) {
   const [localAnswer, setLocalAnswer] = useState(answer ?? (question.type === 'multiple-choice' ? [] : ''))
   const currentAnswer = answer === undefined ? localAnswer : answer
@@ -37,13 +45,18 @@ export function QuestionRenderer({
   const preview = isPreview(mode)
   const correctAnswers = getCorrectAnswers(question)
 
+  // Reveal correctness either in teacher mode (grading), or whenever the
+  // caller explicitly asks for it (e.g. a post-submission review screen).
+  const revealCorrect = teacherMode || showCorrectAnswer
+
   useEffect(() => {
     if (answer !== undefined) setLocalAnswer(answer)
   }, [answer])
 
   const updateAnswer = (nextAnswer) => {
-    if (readOnly || preview) return
+    if (readOnly) return
     setLocalAnswer(nextAnswer)
+    if (preview) return
     onAnswer?.(nextAnswer)
   }
 
@@ -59,9 +72,10 @@ export function QuestionRenderer({
   const optionIsCorrect = (index) => correctAnswers.includes(index)
   const optionIsSelected = (index) => isSelected(currentAnswer, index)
   const teacherAnswer = teacherMode ? answer : undefined
-  const teacherAnswerIsCorrect = question.type === 'short-answer'
-    ? String(teacherAnswer || '').trim().toLowerCase() === String(getInfo(question).expectedAnswer || '').trim().toLowerCase()
-    : JSON.stringify([...(Array.isArray(teacherAnswer) ? teacherAnswer : [teacherAnswer])].sort()) === JSON.stringify([...correctAnswers].sort())
+  // Whichever answer is relevant to the current mode: the teacher-view
+  // answer being graded, or the candidate's own current answer.
+  const answerToEvaluate = teacherMode ? teacherAnswer : currentAnswer
+  const answerIsCorrect = checkIsCorrect(question, answerToEvaluate, correctAnswers)
 
   return (
     <QuestionCard>
@@ -79,25 +93,32 @@ export function QuestionRenderer({
         teacherMode ? (
           <div>
             <strong>Candidate answer:</strong> {getAnswerLabel(question, teacherAnswer)}
-            <Feedback $correct={teacherAnswerIsCorrect}>{teacherAnswerIsCorrect ? 'Matches expected answer' : 'Needs review'}</Feedback>
+            <Feedback $correct={answerIsCorrect}>{answerIsCorrect ? 'Matches expected answer' : 'Needs review'}</Feedback>
           </div>
         ) : (
-          <AnswerInput
-            aria-label="Short answer"
-            value={currentAnswer}
-            readOnly={readOnly}
-            onChange={(event) => updateAnswer(event.target.value)}
-            placeholder={mode === QUESTION_RENDERER_MODES.DEMO ? 'Demo answer' : 'Type your answer'}
-          />
+          <>
+            <AnswerInput
+              aria-label="Short answer"
+              value={currentAnswer}
+              readOnly={readOnly}
+              onChange={(event) => updateAnswer(event.target.value)}
+              placeholder={mode === QUESTION_RENDERER_MODES.DEMO ? 'Demo answer' : 'Type your answer'}
+            />
+            {showCorrectAnswer && (
+              <Feedback $correct={answerIsCorrect}>
+                Correct answer: {getInfo(question).expectedAnswer || 'N/A'}
+              </Feedback>
+            )}
+          </>
         )
       ) : (
         <Options>
           {getOptions(question).map((option, index) => {
             const selected = optionIsSelected(index)
-            const correct = teacherMode && optionIsCorrect(index)
-            const incorrect = teacherMode && selected && !correct
+            const correct = revealCorrect && optionIsCorrect(index)
+            const incorrect = revealCorrect && selected && !correct
             return (
-              <Option key={`${question.id || question._id}-${index}`} $selected={selected && !teacherMode} $correct={correct} $incorrect={incorrect} $disabled={readOnly}>
+              <Option key={`${question.id || question._id}-${index}`} $selected={selected && !revealCorrect} $correct={correct} $incorrect={incorrect} $disabled={readOnly}>
                 <input
                   type={question.type === 'single-choice' ? 'radio' : 'checkbox'}
                   name={`question-${question.id || question._id}`}
@@ -109,7 +130,11 @@ export function QuestionRenderer({
               </Option>
             )
           })}
-          {teacherMode && <Feedback $correct={teacherAnswerIsCorrect}>{teacherAnswerIsCorrect ? 'Correct answer' : 'Candidate answer differs from the answer key'}</Feedback>}
+          {revealCorrect && (
+            <Feedback $correct={answerIsCorrect}>
+              {answerIsCorrect ? 'Correct answer' : 'Candidate answer differs from the answer key'}
+            </Feedback>
+          )}
         </Options>
       )}
 

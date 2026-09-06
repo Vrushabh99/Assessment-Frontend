@@ -10,6 +10,10 @@ import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 import { AssessmentHeader, HeaderActions, HeaderContent } from './styles'
 import { Timer } from '../../../components/ui/Timer'
+import { ToggleButton } from '@mui/material'
+import { CheckBox } from '@mui/icons-material'
+import { useState } from 'react'
+import { ToggleSwitch } from '../../../components/ui/ToggleSwitch'
 
 const Card = styled.section`
   padding: 24px;
@@ -23,6 +27,7 @@ const QuestionList = styled.div`display: grid; gap: 16px;`
 
 export function AssessmentPreviewPage() {
   const { assessmentId } = useParams()
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const query = useQuery({ queryKey: assessmentKeys.detail(assessmentId), queryFn: () => getAssessment(assessmentId) })
   if (query.isLoading) return <DashboardLayout title="Assessment details" role="Administrator"><CommonLoader label="Loading assessment..." /></DashboardLayout>
   if (query.isError) return <DashboardLayout title="Assessment details" role="Administrator"><Muted role="alert">{query.error.message}</Muted></DashboardLayout>
@@ -32,17 +37,26 @@ export function AssessmentPreviewPage() {
       <Card>
         <AssessmentHeader>
           <HeaderContent>
+            <Pill tone="warning">Preview for admin</Pill>
             <h2>{assessment.title}</h2>
-            <Pill tone="warning">Preview</Pill>
           </HeaderContent>
+          
+            <HeaderActions>
           <Timer minutes={20} active onExpire={() => {}} />
-          <HeaderActions>
-            <Button type="button" variant="primary" onClick={() => {}}>Submit</Button>
+          <Button type="button" variant="primary" onClick={() => {}}>Submit</Button>
           </HeaderActions>
         </AssessmentHeader>
         <Meta>
           <Muted>{assessment.questionIds.length} questions</Muted>
           <Muted>{assessment.totalPoints} total points</Muted>
+        </Meta>
+        <Meta>
+          <ToggleSwitch
+            id="show-correct-answer"
+            checked={showCorrectAnswer}
+            onChange={setShowCorrectAnswer}
+            label="Show correct answers"
+          />
         </Meta>
         <QuestionList>
           {assessment.questionIds.map((question) => (
@@ -50,6 +64,7 @@ export function AssessmentPreviewPage() {
               key={question._id || question.id}
               question={question}
               mode={QUESTION_RENDERER_MODES.PREVIEW}
+              showCorrectAnswer={showCorrectAnswer}
             />
           ))}
         </QuestionList>
