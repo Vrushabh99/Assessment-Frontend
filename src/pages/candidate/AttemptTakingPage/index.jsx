@@ -22,6 +22,7 @@ import { Button } from '../../../components/ui/Button'
 import { Timer } from '../../../components/ui/Timer'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
+import { Card } from '../../../components/CommonStyles'
 
 const Layout = styled.div`display: grid; gap: 16px;`
 const Header = styled.div`
@@ -44,16 +45,7 @@ const ActionWrapper = styled.div`
   align-items: center;
   justify-content: flex-end;
 `;
-export const Card = styled.section`
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 28px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
-`
+
 
 const QuestionList = styled.div`display: grid; gap: 16px;`
 const SaveState = styled.span`font-size: 0.8rem; color: ${({ theme }) => theme.colors.muted};`

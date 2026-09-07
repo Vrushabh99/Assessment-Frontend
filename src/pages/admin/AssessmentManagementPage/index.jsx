@@ -16,7 +16,7 @@ const Header = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
@@ -30,23 +30,31 @@ const Card = styled.section`
 const Toolbar = styled.div`
   display: flex;
   gap: 12px;
-  padding: 20px;
+  padding: 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 640px) { flex-direction: column; }
+  @media (max-width: 640px) { flex-direction: column; padding: 16px 10px; }
 `
-const AssessmentList = styled.div`display: grid; gap: 12px; padding: 20px;`
+const AssessmentList = styled.div`
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  @media (max-width: 640px) { padding: 16px 10px; }
+  @media (max-width: 400px) {
+    padding: 10px 8px;
+  }
+`
 const AssessmentCard = styled.article`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   padding: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
-  @media (max-width: 640px) { align-items: flex-start; }
+  @media (max-width: 640px) { align-items: flex-start; padding: 18px 10px; flex-direction: column}
 `
 const AssessmentTitle = styled.h3`margin: 0 0 8px;`
-const CardActions = styled.div`position: relative; display: flex; align-items: center; gap: 12px;`
+const CardActions = styled.div`position: relative; display: flex; align-items: center; gap: 12px; margin-left: auto`
 const Metadata = styled.div`
   display: flex;
   align-items: center;

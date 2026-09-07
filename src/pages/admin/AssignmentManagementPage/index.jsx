@@ -17,7 +17,7 @@ const Header = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
@@ -31,11 +31,19 @@ const Card = styled.section`
 const Toolbar = styled.div`
   display: flex;
   gap: 12px;
-  padding: 20px;
+  padding: 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 640px) { flex-direction: column; }
+  @media (max-width: 640px) { flex-direction: column; padding: 16px 10px; }
 `
-const AssignmentList = styled.div`display: grid; gap: 12px; padding: 20px;`
+const AssignmentList = styled.div`
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  @media (max-width: 640px) { padding: 16px 10px; }
+  @media (max-width: 400px) {
+    padding: 10px 8px;
+  }
+`
 const AssignmentCard = styled.article`
   display: flex;
   align-items: center;
@@ -44,10 +52,10 @@ const AssignmentCard = styled.article`
   padding: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
-  @media (max-width: 640px) { align-items: flex-start; }
+  @media (max-width: 640px) { align-items: flex-start; padding: 18px 10px; flex-direction: column}
 `
 const AssignmentContent = styled.div`display: grid; gap: 10px; min-width: 0;`
-const CardActions = styled.div`display: flex; align-items: center; gap: 8px;`
+const CardActions = styled.div`display: flex; align-items: center; gap: 8px; margin-left: auto`
 const AssignmentTitleRow = styled.div`
   display: flex;
   align-items: center;

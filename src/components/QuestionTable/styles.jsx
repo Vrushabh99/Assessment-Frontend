@@ -3,7 +3,11 @@ import styled from 'styled-components'
 export const QuestionGridWrapper = styled.div`
   display: grid;
   gap: 12px;
-  padding: 20px;
+  padding: 16px;
+  @media(max-width: 640px) {
+    padding: 16px 10px;
+    gap: 10px;
+  }
 `
 
 export const QuestionCard = styled.article`
@@ -16,6 +20,8 @@ export const QuestionCard = styled.article`
   border-radius: 12px;
   @media (max-width: 640px) {
     align-items: flex-start;
+    padding: 18px 10px;
+    flex-direction: column;
   }
 `
 
@@ -54,6 +60,7 @@ export const CardActions = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 `
 
 export const EmptyState = styled.p`

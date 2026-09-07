@@ -29,16 +29,16 @@ const Toolbar = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 640px) { flex-direction: column; }
 `
-const AssessmentList = styled.div`display: grid; gap: 12px; padding: 20px;`
+const AssessmentList = styled.div`display: grid; gap: 12px; padding: 16px;`
 const AssessmentCard = styled.article`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px;
+  padding: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
-  @media (max-width: 640px) { align-items: flex-start; flex-direction: column; }
+  @media (max-width: 640px) { align-items: flex-start; flex-direction: column; padding: 16px 10px}
 `
 const AssessmentContent = styled.div`display: grid; gap: 10px; min-width: 0;`
 const TitleRow = styled.div`

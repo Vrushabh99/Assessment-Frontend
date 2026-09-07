@@ -26,8 +26,24 @@ const Card = styled.section`
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
 `
-const Toolbar = styled.div`padding: 20px; border-bottom: 1px solid ${({ theme }) => theme.colors.border};`
-const CandidateList = styled.div`display: grid; gap: 12px; padding: 20px;`
+const Toolbar = styled.div`
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 640px) { flex-direction: column; padding: 16px 10px; }
+`
+const CandidateList = styled.div`
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 16px 10px;
+  }
+  @media (max-width: 400px) {
+    padding: 10px 8px;
+  }
+`
 const CandidateCard = styled.article`
   display: flex;
   align-items: center;
@@ -36,6 +52,7 @@ const CandidateCard = styled.article`
   padding: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
+  @media (max-width: 640px) { align-items: flex-start; padding: 18px 10px;}
 `
 const CandidateName = styled.h3`margin: 0 0 6px;`
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`

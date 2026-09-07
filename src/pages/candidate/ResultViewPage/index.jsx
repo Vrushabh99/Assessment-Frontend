@@ -17,7 +17,7 @@ const Container = styled.div`
 `
 
 const Card = styled.section`
-  padding: 24px;
+  padding: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};
@@ -28,7 +28,7 @@ const Header = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 24px;
 `
 
@@ -72,22 +72,14 @@ const Divider = styled.hr`
 
 const QuestionBlock = styled.div`
   margin-bottom: 32px;
-  padding: 20px;
   background-color: ${({ theme }) => theme.colors.primarySoft};
   border-radius: 8px;
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
 `
 
-const QuestionText = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: 16px;
-  font-size: 1.1rem;
-`
-
 const AnswerSection = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  padding: 16px;
+  padding: 10px;
   border-radius: 8px;
   margin: 8px 0;
   display: flex;
@@ -111,39 +103,8 @@ const AnswerContent = styled.div`
   line-height: 1.6;
 `
 
-const GradingSection = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid ${({ theme }) => theme.colors.primary};
-  display: flex;
-  margin-top: 8px;
-  gap: 12px;
-`
 
-const FormRow = styled.div`
-  display: flex;
-  width: 100%;
-  gap: 12px;
-  justify-content: flex-end;
-  input {
-    padding: 6px;
-    width: 80px;
-  }
-`
 
-const ScoreWrapper = styled.div`
-  display: flex;
-  font-size: 16px;
-  align-items: center;
-`
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-  @media (max-width: 640px) {
-    flex-direction: column;
-  }
-`
 
 const SubmissionInfo = styled.div`
   display: grid;
@@ -173,14 +134,6 @@ const InfoValue = styled.span`
   font-size: 1.1rem;
 `
 
-const SuccessMessage = styled.div`
-  padding: 12px 16px;
-  background-color: ${({ theme }) => theme.colors.successBackground};
-  color: ${({ theme }) => theme.colors.successText};
-  border-radius: 8px;
-  margin-bottom: 16px;
-  border-left: 4px solid ${({ theme }) => theme.colors.successText};
-`
 
 const formatDate = (value) => {
   if (!value) return 'N/A'
@@ -253,7 +206,7 @@ export function ResultViewPage() {
               </MetadataRow>
             </HeaderContent>
             <HeaderActions>
-              <Button variant="secondary" onClick={() => navigate(-1)}>
+              <Button variant="primary" onClick={() => navigate(-1)}>
                 Back
               </Button>
             </HeaderActions>

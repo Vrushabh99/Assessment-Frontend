@@ -3,10 +3,14 @@ import styled, { css } from 'styled-components'
 export const QuestionCard = styled.article`
   display: grid;
   gap: 16px;
-  padding: 20px;
+  padding: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 14px;
   background: ${({ theme }) => theme.colors.surface};
+  @media(max-width: 640px) {
+    gap: 10px;
+    padding: 16px 8px;
+  }
 `
 
 export const QuestionHeader = styled.div`

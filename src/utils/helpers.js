@@ -33,7 +33,7 @@ export const formatDate = (value, options = {}) => {
   return `${date.toLocaleString([], {
     day: '2-digit',
     month: 'short',
-    year: 'numeric',
+    year: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     ...(seconds ? { second: '2-digit' } : {}),

@@ -7,11 +7,12 @@ import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
-import { AssessmentHeader, HeaderActions, HeaderContent, Card, Meta, Muted, QuestionList } from './styles'
+import { AssessmentHeader, HeaderActions, HeaderContent, Meta, Muted, QuestionList } from './styles'
 import { Timer } from '../../../components/ui/Timer'
 import { AppBar } from '@mui/material'
 import { useState } from 'react'
 import { ToggleSwitch } from '../../../components/ui/ToggleSwitch'
+import { Card } from '../../../components/CommonStyles'
 
 
 
@@ -24,7 +25,6 @@ export function AssessmentPreviewPage() {
   const assessment = query.data
   return (
     <DashboardLayout title="Assessment details" role="Administrator" hideNavigation>
-        
         <AssessmentHeader>
           <HeaderContent>
           <Pill tone="warning">Preview for admin</Pill>
@@ -33,18 +33,15 @@ export function AssessmentPreviewPage() {
         </AssessmentHeader>
         <AppBar position='sticky' color='tranparent' style={{width: 340, display: 'flex',justifyContent: 'flex-end', marginLeft: 'auto', background: '#ffffff', padding: '8px'}}>
         <HeaderActions>
-          <Timer minutes={260} active onExpire={() => {}} />
+          <Timer minutes={10} active onExpire={() => {}} />
           <Button type="button" variant="primary" onClick={() => {}}>Submit</Button>
           </HeaderActions>
         </AppBar>
 
-          
-      <Card>
+        <Card>
         <Meta>
-          <Muted>{assessment.questionIds.length} questions</Muted>
-          <Muted>{assessment.totalPoints} total points</Muted>
-        </Meta>
-        <Meta>
+          <Pill tone="info">{assessment.questionIds.length} questions</Pill>
+          <Pill tone="info">{assessment.totalPoints} total points</Pill>
           <ToggleSwitch
             id="show-correct-answer"
             checked={showCorrectAnswer}

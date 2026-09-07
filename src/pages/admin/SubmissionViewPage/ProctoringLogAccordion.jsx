@@ -190,7 +190,7 @@ export function ProctoringLogAccordion({ events = [] }) {
                           <ListItem key={`${type}-${event.timestamp}-${i}`} disableGutters sx={{ py: 0.5 }}>
                             <WrapperDiv>
                               <Pill tone='neutral'>
-                                {formatDate(event.timestamp, { seconds: true })}
+                                {formatDate(event.timestamp, { second: '2-digit' })}
                               </Pill>
                             </WrapperDiv>
                           </ListItem>

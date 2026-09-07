@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "../../../layouts/DashboardLayout";
 import { CommonLoader } from "../../../components/ui/CommonLoader";
-import { AssessmentCard, AssessmentList, AssessmentTitle, CandidateCard, CardActions, InfoItem, InfoLabel, InfoValue, Metadata, Muted } from "./styles";
+import { AssessmentCard, AssessmentList, AssessmentTitle, CandidateCard, Card, CardActions, InfoItem, InfoLabel, InfoValue, Metadata, Muted, Toolbar } from "./styles";
 import { candidateKeys, getCandidateAttempts } from "../../../api/candidates";
 import { useNavigate, useParams } from "react-router-dom";
 import { Pill } from "../../../components/ui/Pill";
@@ -66,6 +66,8 @@ export function CandidateDetailsPage() {
             <InfoValue>{candidate.email || 'N/A'}</InfoValue>
           </InfoItem>
         </CandidateCard>
+      <Card>
+        <Toolbar>
         <DropDown
           id="status-filter"
           value={statusFilter}
@@ -80,9 +82,9 @@ export function CandidateDetailsPage() {
           ]}
           style={{
             width: 270,
-            margin: '0 0 20px 0'
           }}
         />
+        </Toolbar>
         <AssessmentList>
           {attempts.map(({ assessment, assignment, score, status, submittedAt }) => (
             <AssessmentCard key={assessment._id}>
@@ -119,6 +121,7 @@ export function CandidateDetailsPage() {
           onPageChange={setPage}
           itemLabel="assessments"
         />
+      </Card>
     </DashboardLayout>
 
   )

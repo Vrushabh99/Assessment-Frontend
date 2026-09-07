@@ -11,9 +11,11 @@ export const AssessmentHeader = styled.div`
     margin: 0;
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 640px) {
     align-items: flex-start;
     flex-direction: column;
+    gap: 10px;
+    padding: 16px;
   }
 `
 
@@ -43,6 +45,6 @@ export const Card = styled.section`
   background: ${({ theme }) => theme.colors.surface};
 `
 
-export const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-export const Meta = styled.div`display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 24px;`
+export const Muted = styled.div`color: ${({ theme }) => theme.colors.muted};`
+export const Meta = styled.div`display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0px;`
 export const QuestionList = styled.div`display: grid; gap: 16px;`

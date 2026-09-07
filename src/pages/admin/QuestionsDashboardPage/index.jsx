@@ -19,14 +19,20 @@ const Header = styled.div`
   @media (max-width: 640px) { flex-direction: column; }
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
+
 const Card = styled.section`
-  overflow: hidden; border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 16px; background: ${({ theme }) => theme.colors.surface};
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
 `
 const Toolbar = styled.div`
-  display: flex; gap: 12px; padding: 20px; border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 640px) { flex-direction: column; }
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 640px) { flex-direction: column; padding: 16px 10px; }
 `
 
 export function QuestionsDashboardPage() {

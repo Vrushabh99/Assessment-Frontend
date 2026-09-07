@@ -9,7 +9,7 @@ export const Dashboard = styled.main`
 export const Container = styled.div`
   width: min(100% - 48px, 1120px);
   margin: 0 auto;
-  @media (max-width: 640px) { width: min(100% - 32px, 1120px); }
+  @media (max-width: 640px) { width: min(100% - 16px, 1120px); }
 `
 
 export const Topbar = styled.header`

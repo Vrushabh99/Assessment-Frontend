@@ -23,7 +23,8 @@ const Container = styled.div`
 `
 
 const Card = styled.section`
-  padding: 24px;
+  padding: 16px;
+  gap: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};
@@ -35,9 +36,10 @@ const Header = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   @media (max-width: 640px) {
     flex-direction: column;
+    gap: 10px
   }
 `
 
@@ -63,9 +65,9 @@ const HeaderActions = styled.div`
 const MetadataRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 `
 
 const Muted = styled.p`
@@ -204,7 +206,7 @@ const AssessmentInfo = styled.div`
   padding: 16px;
   background-color: ${({ theme }) => theme.colors.primarySoft};
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `
 
 const InfoRow = styled.div`

@@ -13,17 +13,10 @@ import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/co
 import { ProctoringLogAccordion } from './ProctoringLogAccordion'
 import { assignmentKeys } from '../../../api/assignments'
 import { Alert, Snackbar } from '@mui/material'
+import { Card } from '../../../components/CommonStyles'
 const Container = styled.div`
   display: grid;
-  gap: 24px;
-`
-
-const Card = styled.section`
-  padding: 24px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 2px 8px ${({ theme }) => theme.colors.shadow};
+  gap: 16px;
 `
 
 const Header = styled.div`
@@ -76,10 +69,13 @@ const Divider = styled.hr`
 
 const QuestionBlock = styled.div`
   margin-bottom: 32px;
-  padding: 20px;
+  padding: 16px;
   background-color: ${({ theme }) => theme.colors.primarySoft};
   border-radius: 8px;
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
+  @media(max-width: 640px) {
+    padding: 16px 10px;
+  }
 `
 
 const QuestionText = styled.div`
