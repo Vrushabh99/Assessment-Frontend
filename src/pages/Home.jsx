@@ -80,7 +80,7 @@ const HeroActions = styled.div`
 `
 
 const DemoCard = styled.section`
-  padding: 24px;
+  padding: 10px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};
