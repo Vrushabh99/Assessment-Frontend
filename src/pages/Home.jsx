@@ -3,6 +3,11 @@ import styled from 'styled-components'
 import { Button } from '../components/ui/Button'
 import { Pill } from '../components/ui/Pill'
 import { Timer } from '../components/ui/Timer'
+import { Questions } from './SampleQuestions'
+import { QuestionRenderer } from '../components/QuestionRenderer'
+import { QUESTION_RENDERER_MODES } from '../components/QuestionRenderer/constants'
+import { ToggleSwitch } from '../components/ui/ToggleSwitch'
+import { useState } from 'react'
 
 const Page = styled.main`
   min-height: 100vh;
@@ -47,7 +52,7 @@ const Eyebrow = styled.p`
 const Hero = styled.section`
   display: grid;
   gap: 48px;
-  padding: 56px 0 72px;
+  padding: 16px 0 72px;
   @media (min-width: 900px) {
     grid-template-columns: 1.1fr 0.9fr;
     align-items: center;
@@ -92,8 +97,9 @@ const DemoHeader = styled.div`
 `
 
 const DemoTitle = styled.div`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.muted};
+  font-size: 1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
 `
 
 const EventRow = styled.div`
@@ -242,16 +248,47 @@ const FooterLink = styled.a`
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `
 
+const QuestionWrapper = styled.div`
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+`
+
+const EventData = [
+  {
+    name: "Attempt submitted",
+    tone: "success",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Attempt flagged",
+    tone: "warning",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Window Blur",
+    tone: "warning",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Autosave: Question 2",
+    tone: "success",
+    value: "07 Sept 26, 08:35:12 AM"
+  },
+  {
+    name: "Attempt Started",
+    tone: "success",
+    value: "07 Sept 26, 08:32:42 AM"
+  },
+]
+
 export function HomePage() {
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   return (
     <Page>
       <Container>
         <Nav>
-          <Brand to="/login">
-            <img src="/logo.svg" alt="" />
-            Procteria
-          </Brand>
-          <Button as={Link} to="/login">Sign in</Button>
+          <img src="/big-logo.png" alt="Proctored Assessment Platform Logo" width={300} height={100} /> 
         </Nav>
 
         <Hero>
@@ -263,32 +300,27 @@ export function HomePage() {
               browser-level proctoring — so admins get a real record, not just a final score.
             </Lede>
             <HeroActions>
-              <Button as={Link} to="/login">Sign in</Button>
+              <Button as={Link} to="/login">Log in</Button>
               <Button as="a" href="#features" variant="secondary">See how it works</Button>
+              <Button as="a" href="#questions" variant="secondary">Question Samples</Button>
             </HeroActions>
           </div>
 
           <DemoCard>
             <DemoHeader>
-              <DemoTitle>Live attempt · Systems Design Round</DemoTitle>
-              <Timer minutes={42} active warningMinutes={5} />
+              <DemoTitle>Live attempt · Ancient History</DemoTitle>
+              <Timer minutes={30} active warningMinutes={5} />
             </DemoHeader>
-            <EventRow>
-              <span>Attempt started, fullscreen entered</span>
-              <EventTime>00:00:04</EventTime>
-            </EventRow>
-            <EventRow>
-              <Pill tone="warning">Flagged</Pill>
-              <EventTime>00:12:31</EventTime>
-            </EventRow>
-            <EventRow>
-              <span>Answer autosaved · Question 5</span>
-              <EventTime>00:15:20</EventTime>
-            </EventRow>
-            <EventRow>
-              <Pill tone="success">Submitted</Pill>
-              <EventTime>00:44:52</EventTime>
-            </EventRow>
+            {EventData.map(((event, index) => (
+              <EventRow key={index}>
+                <Pill tone={event.tone}>
+                  {event.name}
+                </Pill>
+                <Pill tone="neutral">
+                  {event.value}
+                </Pill>
+              </EventRow>
+            )))}
           </DemoCard>
         </Hero>
 
@@ -333,6 +365,27 @@ export function HomePage() {
           </FeatureGrid>
         </Section>
 
+        <Section id="questions">
+          <SectionHead>
+            <h2>Question Samples</h2>
+            <ToggleSwitch
+                        id="show-correct-answer"
+                        checked={showCorrectAnswer}
+                        onChange={setShowCorrectAnswer}
+                        label="Show correct answers"
+                      />
+          </SectionHead>
+          <QuestionWrapper>
+          {Questions.map((question) => (
+            <QuestionRenderer 
+              key={question._id}
+              question={question}
+              mode={QUESTION_RENDERER_MODES.PREVIEW}
+              showCorrectAnswer={showCorrectAnswer}
+            />
+          ))}
+          </QuestionWrapper>
+        </Section>
         <Section>
           <SectionHead>
             <h2>One workspace, two roles</h2>
@@ -367,24 +420,24 @@ export function HomePage() {
             <h2>Built with</h2>
           </SectionHead>
           <StackRow>
-            <Pill tone="neutral">React 18</Pill>
-            <Pill tone="neutral">Vite</Pill>
-            <Pill tone="neutral">Material UI</Pill>
-            <Pill tone="neutral">TanStack Query</Pill>
-            <Pill tone="neutral">styled-components</Pill>
-            <Pill tone="neutral">Node.js</Pill>
-            <Pill tone="neutral">MongoDB</Pill>
-            <Pill tone="neutral">JWT auth</Pill>
+            <Pill tone="info">React 18</Pill>
+            <Pill tone="info">TanStack Query</Pill>
+            <Pill tone="info">Vite</Pill>
+            <Pill tone="info">Material UI</Pill>
+            <Pill tone="info">styled-components</Pill>
+            <Pill tone="info">Node.js</Pill>
+            <Pill tone="info">MongoDB</Pill>
+            <Pill tone="info">JWT auth</Pill>
           </StackRow>
         </Section>
       </Container>
 
       <CtaBand>
         <Container>
-          <CtaHeadline>Sign in to your workspace</CtaHeadline>
-          <CtaMuted>Admin and candidate accounts both sign in from the same page.</CtaMuted>
+          <CtaHeadline>Log in to your workspace</CtaHeadline>
+          <CtaMuted>Admin and candidate accounts both log in from the same page.</CtaMuted>
           <CtaActions>
-            <Button as={Link} to="/login">Sign in</Button>
+            <Button as={Link} to="/login">Log in</Button>
           </CtaActions>
         </Container>
       </CtaBand>

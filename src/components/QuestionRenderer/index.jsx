@@ -38,6 +38,16 @@ export function QuestionRenderer({
   onScore,
   showCorrectAnswer = false,
 }) {
+
+  console.log(
+    question,
+  mode,
+  answer,
+  onAnswer,
+  score,
+  onScore,
+  showCorrectAnswer);
+
   const [localAnswer, setLocalAnswer] = useState(answer ?? (question.type === 'multiple-choice' ? [] : ''))
   const currentAnswer = answer === undefined ? localAnswer : answer
   const teacherMode = isTeacherMode(mode)
@@ -106,7 +116,7 @@ export function QuestionRenderer({
             />
             {showCorrectAnswer && (
               <Feedback $correct={answerIsCorrect}>
-                Correct answer: {getInfo(question).expectedAnswer || 'N/A'}
+                Expected Answer: {getInfo(question).expectedAnswer || 'N/A'}
               </Feedback>
             )}
           </>
