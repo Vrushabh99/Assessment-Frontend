@@ -24,12 +24,21 @@ export const formatMinutes = (input) => {
   return `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m`
 }
 
-export const formatDate = (value) => {
+export const formatDate = (value, options = {}) => {
+  const { seconds = false } = options;
   if (!value) return '-'
   const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? '-'
-    : `${date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', hour12: true })}`
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return `${date.toLocaleString([], {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(seconds ? { second: '2-digit' } : {}),
+    hour12: true
+  })}`
 }
 
 export const isOlderTime = (value) => {

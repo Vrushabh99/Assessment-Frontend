@@ -6,10 +6,12 @@ export const ButtonBase = styled.button`
   justify-content: center;
   gap: 8px;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
   font: inherit;
   font-weight: 600;
   padding: 11px 16px;
+  opacity: ${({ $disabled }) => $disabled ? 0.5 : 1};
+  pointer-events: ${({ $disabled }) => $disabled ? 'none' : 'auto'};
   border: 1px solid ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.primary : theme.colors.border};
   background: ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.primary : theme.colors.surface};
   color: ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.surface : theme.colors.text};

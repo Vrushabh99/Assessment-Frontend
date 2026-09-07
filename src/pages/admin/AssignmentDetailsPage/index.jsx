@@ -303,6 +303,9 @@ export function AssignmentDetailsPage() {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter })})
       setSnackbar({ open: true, message: `Attempt resetted for ${currentCandidate.fullName}.`})
     },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Something went wrong. Try again !', severity: 'error'})
+    }
   })
 
   if (assignmentQuery.isLoading) {
@@ -424,7 +427,6 @@ export function AssignmentDetailsPage() {
             </div>
           )}
         </Card>
-
         <Card>
           <h3 style={{ marginTop: 0 }}>
             Student Submissions ({candidatesQuery?.data?.pagination.total || 0})

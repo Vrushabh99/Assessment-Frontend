@@ -2,15 +2,17 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { useState } from 'react'
-import { getSubmission, submissionKeys, updateSubmissionGrade } from '../../../api/submissions'
+import { getSubmission, resetCandidateAttempt, submissionKeys, updateSubmissionGrade } from '../../../api/submissions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
-import { TextField } from '../../../components/ui/TextField'
 import { NumberField } from '../../../components/ui/NumberField'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
+import { ProctoringLogAccordion } from './ProctoringLogAccordion'
+import { assignmentKeys } from '../../../api/assignments'
+import { Alert, Snackbar } from '@mui/material'
 const Container = styled.div`
   display: grid;
   gap: 24px;
@@ -26,6 +28,7 @@ const Card = styled.section`
 
 const Header = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
@@ -168,10 +171,12 @@ const InfoLabel = styled.span`
   font-size: 0.85rem;
 `
 
-const InfoValue = styled.span`
+const InfoValue = styled.div`
   color: ${({ theme }) => theme.colors.text};
   font-weight: 600;
   font-size: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
 `
 
 const SuccessMessage = styled.div`
@@ -209,9 +214,20 @@ const StatusPill = ({ submission }) => {
     </Pill>
   )
 }
+
+const EVENT_LABELS = {
+  tab_switch: 'Tab switch',
+  window_blur: 'Window blur',
+  fullscreen_exit: 'Fullscreen exit',
+  copy: 'Copy',
+  paste: 'Paste',
+  right_click: 'Right click',
+}
+
 export function SubmissionViewPage() {
   const navigate = useNavigate()
   const { assignmentId, candidateId } = useParams()
+  const [ snackbar, setSnackbar] = useState({ open: false, message: ''})
   const location = useLocation()
   const isGradingMode = location.pathname.includes('/grade')
 
@@ -228,9 +244,22 @@ export function SubmissionViewPage() {
     mutationFn: (gradeInfo) => updateSubmissionGrade(gradeInfo),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: submissionKeys.detail(assignmentId, candidateId) })
-      setSuccessMessage('Grade saved successfully!')
-      setTimeout(() => setSuccessMessage(''), 3000)
+      setSnackbar({ open: true, message: 'Grade saved successfully !!'})
     },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Something went wrong. Try again !', severity: 'error'})
+    }
+  })
+
+  const resetMutation = useMutation({
+      mutationFn: (data) => resetCandidateAttempt(data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: assignmentKeys.detail(assignmentId)})
+        setSnackbar({ open: true, message: `Attempt resetted for ${submission.candidate.fullName}.`})
+      },
+      onError: () => {
+        setSnackbar({ open: true, message: 'Something went wrong. Try again !', severity: 'error'})
+      }
   })
 
   if (submissionQuery.isLoading) {
@@ -274,6 +303,9 @@ export function SubmissionViewPage() {
     }))
   }
 
+  const handleReset = async () => {
+    await resetMutation.mutateAsync({ attemptId: submission.attemptId })
+  }
   return (
     <DashboardLayout title={pageTitle} role="Administrator">
       <Container>
@@ -289,12 +321,19 @@ export function SubmissionViewPage() {
                 />
                 {submission.autoSubmittedReason === 'violation_limit_exceeded' && (
                 <Pill tone="warning">
-                  Violated: {submission.autoSubmittedViolationType}
+                  Flagged: {EVENT_LABELS[submission.autoSubmittedViolationType]}
                 </Pill>
             )}
               </MetadataRow>
             </HeaderContent>
             <HeaderActions>
+              <Button
+                variant="primary"
+                onClick={() => handleReset()}
+                disabled={submission.status === "assigned"}
+              >
+                Reset Attempt
+              </Button>
               <Button variant="primary" onClick={() => navigate(-1)}>
                 Back
               </Button>
@@ -333,6 +372,7 @@ export function SubmissionViewPage() {
 
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
+        {submission && (<ProctoringLogAccordion events={submission.proctoringEvents}/>)}
         {submission.questions && submission.questions.length > 0 && (
           <Card>
             <h3 style={{ marginTop: 0 }}>Responses</h3>
@@ -402,6 +442,16 @@ export function SubmissionViewPage() {
           </Card>
         )}
       </Container>
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => {
+          setSnackbar((current) => ({ ...current, open: false }))}
+        }
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
+      </Snackbar>
     </DashboardLayout>
   )
 }

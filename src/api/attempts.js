@@ -40,10 +40,10 @@ export async function getAttemptState({  assignmentId }) {
   return response.data
 }
 
-export async function saveAnswer({  assignmentId, questionId, selectedOptionIds, textAnswer }) {
+export async function saveAnswer({  assignmentId, questionId, selectedOptionIds, textAnswer, question }) {
   const response = await apiRequest(`/candidate/assignments/${assignmentId}/answers`, {
     method: 'PATCH',
-    body: JSON.stringify({ questionId, selectedOptionIds, textAnswer }),
+    body: JSON.stringify({ questionId, selectedOptionIds, textAnswer, question }),
   })
   return response.data
 }

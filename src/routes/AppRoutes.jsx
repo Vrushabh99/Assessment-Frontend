@@ -20,12 +20,14 @@ import { LoginPage } from '../pages/auth/LoginPage'
 import { AuthProvider } from '../context/AuthContext'
 import { ResultViewPage } from '../pages/candidate/ResultViewPage'
 import { CandidateDetailsPage } from '../pages/admin/CandidateDetailsPage'
+import { HomePage } from '../pages/Home'
 
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/admin"

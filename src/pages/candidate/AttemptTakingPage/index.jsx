@@ -149,7 +149,7 @@ export function AttemptTakingPage() {
   }, [expiresAt, serverTime])
 
   const saveAnswerMutation = useMutation({
-    mutationFn: ({ question, answer }) => saveAnswer({  assignmentId, questionId: question._id, ...toApiAnswer(question, answer) }),
+    mutationFn: ({ question, answer }) => saveAnswer({  assignmentId, questionId: question._id, ...toApiAnswer(question, answer), question }),
   })
 
   const debounceTimers = useRef({})
