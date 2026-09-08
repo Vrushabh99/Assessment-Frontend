@@ -1,3 +1,4 @@
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { ROLES } from '../../../constants/roles'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
@@ -5,6 +6,7 @@ import { useAuth } from '../../../context/AuthContext'
 import { useEffect, useState } from 'react'
 import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
+import { GOOGLE_CLIENT_ID } from '../../../config/env';
 
 const CenteredPage = styled.main`
   display: grid;
@@ -32,12 +34,12 @@ const Eyebrow = styled.div`
   flex-direction: column;
 `
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
-const Form = styled.form`display: grid; gap: 16px; margin-top: 24px;`
+const Form = styled.form`display: grid; gap: 16px; margin: 24px 0px;`
 const ErrorMessage = styled.p`margin: 0; color: ${({ theme }) => theme.colors.danger};`
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { user, isLoading, login } = useAuth()
+  const { user, isLoading, login, googleLogin } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -78,6 +80,19 @@ export function LoginPage() {
           {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
           <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Signing in...' : 'Sign in'}</Button>
         </Form>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <GoogleLogin
+            onSuccess={async (res) => {
+              await googleLogin(res);
+            }}
+            useOneTap
+            theme="filled_blue"       
+            size="large"               
+            shape="rectangle"              
+            text="signin"       
+            logo_alignment="center"
+          />
+        </GoogleOAuthProvider>
       </WelcomeCard>
     </CenteredPage>
   )

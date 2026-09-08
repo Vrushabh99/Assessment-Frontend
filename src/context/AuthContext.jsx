@@ -31,6 +31,16 @@ export function AuthProvider({ children }) {
       queryClient.setQueryData(['auth', 'me'], payload.data.user)
     },
   })
+
+  const googleLoginMutation = useMutation({
+    mutationFn: (data) => apiRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    onSuccess: (payload) => {
+      queryClient.setQueryData(['auth', 'me'], payload.data.user)
+    },
+  })
   
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest('/auth/logout', { method: 'POST' }),
@@ -44,8 +54,12 @@ export function AuthProvider({ children }) {
       const payload = await loginMutation.mutateAsync(credentials)
       return payload.data.user
     },
+    googleLogin: async (data) => {
+      const payload = await googleLoginMutation.mutateAsync(data)
+      return payload.data.user
+    },
     logout: () => logoutMutation.mutateAsync(),
-  }), [loginMutation, logoutMutation, sessionQuery.data, sessionQuery.isLoading])
+  }), [loginMutation, googleLoginMutation, logoutMutation, sessionQuery.data, sessionQuery.isLoading])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
