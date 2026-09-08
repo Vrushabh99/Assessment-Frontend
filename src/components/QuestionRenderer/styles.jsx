@@ -1,5 +1,8 @@
 import styled, { css } from 'styled-components'
 
+export const green = 'rgba(40, 167, 69, 1)';
+export const red = 'rgba(220, 53, 69, 1)';
+
 export const QuestionCard = styled.article`
   display: grid;
   gap: 16px;
@@ -44,9 +47,21 @@ export const Options = styled.div`
   gap: 10px;
 `
 
+export const OptionWrapper = styled.div`
+  display: flex;
+  gap: 10px;
+`
+
+export const CorrectIncorrectWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  width: 24px;
+`;
+
 export const Option = styled.label`
   display: flex;
-  align-items: flex-start;
+  width: 100%;
+  align-items: center;
   gap: 10px;
   padding: 12px;
   border: 1px solid ${({ theme }) => theme.colors.inputBorder};
@@ -59,14 +74,20 @@ export const Option = styled.label`
   `}
 
   ${({ $correct, theme }) => $correct && css`
-    border-color: ${theme.colors.successText};
+    border: 2px solid ${theme.colors.successText};
     background: ${theme.colors.successBackground};
   `}
 
   ${({ $incorrect, theme }) => $incorrect && css`
-    border-color: ${theme.colors.danger};
+     border: 2px solid ${theme.colors.danger};
   `}
 `
+
+export const OptionText = styled.div`
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+`;
 
 export const AnswerInput = styled.textarea`
   width: 100%;

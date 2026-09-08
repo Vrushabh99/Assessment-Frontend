@@ -70,3 +70,64 @@ export const Questions = [
 }
 
 ]
+
+export const EventData = [
+  {
+    name: "Attempt submitted",
+    tone: "success",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Attempt flagged",
+    tone: "warning",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Window Blur",
+    tone: "warning",
+    value: "07 Sept 26, 08:39:04 AM"
+  },
+  {
+    name: "Autosave: Question 2",
+    tone: "success",
+    value: "07 Sept 26, 08:35:12 AM"
+  },
+  {
+    name: "Attempt Started",
+    tone: "success",
+    value: "07 Sept 26, 08:32:42 AM"
+  },
+];
+
+export const QuestionTypes = [
+    {
+        id: 1,
+        value: 'single-choice',
+        label: 'Single Choice',
+    },
+    {
+        id: 2,
+        value: 'multiple-choice',
+        label: 'Multiple Choice',
+    },
+    {
+        id: 3,
+        value: 'short-answer',
+        label: 'Short Answer',
+    },
+];
+
+export const TechStack = [
+  'React 18',
+  'Hooks',
+  'TanStack Query',
+  'JWT auth',
+  'Google OAuth',
+  'Node.js',
+  'Express',
+  'TypeScript',
+  'MongoDB',
+  'Vite',
+  'Material UI',
+  'React Router',
+]

@@ -10,24 +10,14 @@ import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
 import { useAuth } from '../../../context/AuthContext'
 import { formatDate, formatMinutes } from '../../../utils/helpers'
+import { Tabs } from '../../../components/ui/TabList'
 
-const Header = styled.div`
-  margin-bottom: 20px;
-`
-const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
 const Card = styled.section`
   overflow: hidden;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
-`
-const Toolbar = styled.div`
-  display: flex;
-  gap: 12px;
-  padding: 20px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 640px) { flex-direction: column; }
 `
 const AssessmentList = styled.div`display: grid; gap: 12px; padding: 16px;`
 const AssessmentCard = styled.article`
@@ -64,53 +54,8 @@ const Metadata = styled.div`
   font-size: 0.85rem;
 `
 const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.colors.muted}; text-align: center;`
-const TabList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-`
-const Tab = styled.button`
-  flex: 1;
-  padding: 16px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: ${({ theme, $active }) => $active ? theme.colors.primary : theme.colors.muted};
-  border-bottom: 3px solid ${({ theme, $active }) => $active ? theme.colors.primary : 'transparent'};
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  max-width: 100px;
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-    background: ${({ theme }) => theme.colors.background};
-  }
 
-  @media (max-width: 640px) {
-    padding: 12px 16px;
-    font-size: 0.9rem;
-  }
-`
-const TabCount = styled.span`
-  margin-left: 8px;
-  font-size: 0.85rem;
-  opacity: 0.7;
-`
 
-const statusTone = {
-  assigned: 'neutral',
-  in_progress: 'warning',
-  submitted: 'success',
-}
-
-const statusLabel = {
-  assigned: 'Not started',
-  in_progress: 'In progress',
-  submitted: 'Submitted',
-}
 
 const TAB_FILTERS = [
   { id: 'assigned', label: 'Assigned', statuses: ['assigned'] },
@@ -201,22 +146,11 @@ export function CandidateDashboardPage() {
   return (
     <DashboardLayout title="Candidate workspace" role="Candidate">
       <Card>
-        <TabList role="tablist">
-          {TAB_FILTERS.map((tab) => (
-            <Tab
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              $active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </Tab>
-          ))}
-        </TabList>
-        {/* <Toolbar>
-          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} />
-        </Toolbar> */}
+        <Tabs
+          activeTab={activeTab}
+          tabs={TAB_FILTERS}
+          onChange={setActiveTab}
+        />
         {query.isLoading && <CommonLoader label="Loading assessments..." />}
         {query.isError && <EmptyState role="alert">{query.error.message}</EmptyState>}
         {!query.isLoading && !query.isError && !assessments.length && <EmptyState>No assessments in this tab.</EmptyState>}

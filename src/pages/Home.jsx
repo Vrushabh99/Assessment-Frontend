@@ -3,11 +3,12 @@ import styled from 'styled-components'
 import { Button } from '../components/ui/Button'
 import { Pill } from '../components/ui/Pill'
 import { Timer } from '../components/ui/Timer'
-import { Questions } from './SampleQuestions'
+import { Questions, EventData, TechStack, QuestionTypes } from './HomePageData'
 import { QuestionRenderer } from '../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../components/QuestionRenderer/constants'
 import { ToggleSwitch } from '../components/ui/ToggleSwitch'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Tabs } from '../components/ui/TabList'
 
 const Page = styled.main`
   min-height: 100vh;
@@ -37,7 +38,6 @@ const Brand = styled(Link)`
   font-weight: 700;
   font-size: 1.05rem;
   text-decoration: none;
-  img { width: 32px; height: 32px; object-fit: contain; }
 `
 
 const Eyebrow = styled.p`
@@ -124,7 +124,6 @@ const Section = styled.section`
 `
 
 const SectionHead = styled.div`
-  max-width: 620px;
   margin-bottom: 36px;
   h2 {
     font-size: clamp(1.5rem, 2.5vw, 1.9rem);
@@ -252,43 +251,22 @@ const QuestionWrapper = styled.div`
   display: flex;
   gap: 16px;
   flex-direction: column;
+  margin: 16px 0px;
 `
-
-const EventData = [
-  {
-    name: "Attempt submitted",
-    tone: "success",
-    value: "07 Sept 26, 08:39:04 AM"
-  },
-  {
-    name: "Attempt flagged",
-    tone: "warning",
-    value: "07 Sept 26, 08:39:04 AM"
-  },
-  {
-    name: "Window Blur",
-    tone: "warning",
-    value: "07 Sept 26, 08:39:04 AM"
-  },
-  {
-    name: "Autosave: Question 2",
-    tone: "success",
-    value: "07 Sept 26, 08:35:12 AM"
-  },
-  {
-    name: "Attempt Started",
-    tone: "success",
-    value: "07 Sept 26, 08:32:42 AM"
-  },
-]
 
 export function HomePage() {
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [activeTab, setActiveTab] = useState(QuestionTypes[0].id);
+  const currentQuestionType = QuestionTypes.find((q) => q.id === activeTab).value;
+
+  useEffect(() => { setShowCorrectAnswer(false)}, [activeTab])
   return (
     <Page>
       <Container>
         <Nav>
-          <img src="/big-logo.png" alt="Proctored Assessment Platform Logo" width={300} height={100} /> 
+          <Brand to={"/login"}>
+            <img src="/big-logo.png" alt="Proctored Assessment Platform Logo" width={300} height={100} /> 
+          </Brand>
         </Nav>
 
         <Hero>
@@ -368,22 +346,33 @@ export function HomePage() {
         <Section id="questions">
           <SectionHead>
             <h2>Question Samples</h2>
-            <ToggleSwitch
-                        id="show-correct-answer"
-                        checked={showCorrectAnswer}
-                        onChange={setShowCorrectAnswer}
-                        label="Show correct answers"
-                      />
+            <p>A quick look at each question type Procteria supports, exactly as a candidate would see it.</p>
           </SectionHead>
+          <Tabs
+            tabs={QuestionTypes}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
           <QuestionWrapper>
-          {Questions.map((question) => (
-            <QuestionRenderer 
-              key={question._id}
-              question={question}
-              mode={QUESTION_RENDERER_MODES.PREVIEW}
-              showCorrectAnswer={showCorrectAnswer}
+          {Questions.map((question) => {
+            if(currentQuestionType !== question.type) return null;
+            return (
+              <>
+              <ToggleSwitch
+              id="show-correct-answer"
+              checked={showCorrectAnswer}
+              onChange={setShowCorrectAnswer}
+              label="Show correct answers"
             />
-          ))}
+              <QuestionRenderer 
+                key={question._id}
+                question={question}
+                mode={QUESTION_RENDERER_MODES.PREVIEW}
+                showCorrectAnswer={showCorrectAnswer}
+                />
+            </>
+            )
+          })}
           </QuestionWrapper>
         </Section>
         <Section>
@@ -420,15 +409,11 @@ export function HomePage() {
             <h2>Built with</h2>
           </SectionHead>
           <StackRow>
-            <Pill tone="info">React 18</Pill>
-            <Pill tone="info">TanStack Query</Pill>
-            <Pill tone="info">Vite</Pill>
-            <Pill tone="info">Material UI</Pill>
-            <Pill tone="info">styled-components</Pill>
-            <Pill tone="info">Node.js</Pill>
-            <Pill tone="info">MongoDB</Pill>
-            <Pill tone="info">JWT auth</Pill>
+            {TechStack.map((tech) => (
+              <Pill key={tech} tone="info">{tech}</Pill>
+            ))}
           </StackRow>
+
         </Section>
       </Container>
 

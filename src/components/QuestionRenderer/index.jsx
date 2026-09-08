@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Pill } from '../ui/Pill'
-import { AnswerInput, Feedback, Option, Options, QuestionCard, QuestionHeader, QuestionMeta, QuestionTitle, ScoreField } from './styles'
+import { CheckCircle, Cancel } from '@mui/icons-material';
+import { AnswerInput, CorrectIncorrectWrapper, Feedback, green, Option, OptionText, Options, OptionWrapper, QuestionCard, QuestionHeader, QuestionMeta, QuestionTitle, red, ScoreField } from './styles'
 import { QUESTION_RENDERER_MODES } from './constants'
+import { CheckBox } from '../ui/CheckBox';
+import { Radio } from '../ui/Radio';
 
 const getInfo = (question) => question.additionalInfo || {}
 const getOptions = (question) => getInfo(question).options || []
@@ -92,6 +95,11 @@ export function QuestionRenderer({
       <QuestionHeader>
         <QuestionTitle>{question.questionText}</QuestionTitle>
         <QuestionMeta>
+          {revealCorrect &&  question.type !== 'short-answer' && (
+            <Pill tone={answerIsCorrect ? 'success' : 'warning'}>
+              {answerIsCorrect ? 'Correct' : 'Incorrect'}
+            </Pill>
+          )}
           <Pill tone="info">{question.type.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')}</Pill>
           <Pill tone="info">
             {question.points} point{question.points === 1 ? '' : 's'}
@@ -128,16 +136,43 @@ export function QuestionRenderer({
             const correct = revealCorrect && optionIsCorrect(index)
             const incorrect = revealCorrect && selected && !correct
             return (
-              <Option key={`${question.id || question._id}-${index}`} $selected={selected && !revealCorrect} $correct={correct} $incorrect={incorrect} $disabled={readOnly}>
-                <input
-                  type={question.type === 'single-choice' ? 'radio' : 'checkbox'}
-                  name={`question-${question.id || question._id}`}
+              <OptionWrapper  key={`${question.id || question._id}-${index}`}>
+                {revealCorrect && (
+                  <CorrectIncorrectWrapper>
+                  {(selected || correct) && (
+                    <>
+                    {correct ? <CheckCircle
+                      sx={{
+                        fill: green,
+                      }}
+                    /> : <Cancel
+                      sx={{
+                        fill: red,
+                      }}
+                    />}
+                    </>
+                  )}
+                  </CorrectIncorrectWrapper>
+                )}
+              <Option $selected={selected && !revealCorrect} $correct={correct} $incorrect={incorrect} $disabled={readOnly}>
+                {question.type === 'single-choice' ? (
+                  <Radio
                   checked={selected}
-                  disabled={readOnly}
                   onChange={() => toggleOption(index)}
-                />
-                <span>{option}</span>
+                  name={`option-${index + 1}`}
+                  disabled={readOnly}
+                  />
+                ): (
+                  <CheckBox
+                    checked={selected}
+                    onChange={() => toggleOption(index)}
+                    name={`option-${index + 1}`}
+                    disabled={readOnly}
+                  />
+                )}
+                <OptionText>{option}</OptionText>
               </Option>
+              </OptionWrapper>
             )
           })}
           {revealCorrect && (
