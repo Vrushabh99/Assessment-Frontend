@@ -176,7 +176,7 @@ export function ProctoringLogAccordion({ events = [] }) {
                       <>
                       <WrapperDiv>
                         <Pill tone='neutral'>
-                          {formatDate(latest.timestamp, { seconds: true })}
+                          {formatDate(latest.timestamp, { second: '2-digit' })}
                         </Pill>
                       </WrapperDiv>
                       </>
