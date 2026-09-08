@@ -312,8 +312,7 @@ export function HomePage() {
               <Pill tone="info">Timing</Pill>
               <FeatureTitle>Server-synced countdown</FeatureTitle>
               <FeatureBody>
-                The timer shown to a candidate periodically re-syncs against the server's
-                remaining-time value, so local clock drift or tab refreshes don't extend an attempt.
+                The timer is recalculated from the server's stored start time on every load — not the candidate's clock — so refreshing or tampering with the system clock never changes how much time is left.
               </FeatureBody>
             </FeatureCard>
             <FeatureCard>

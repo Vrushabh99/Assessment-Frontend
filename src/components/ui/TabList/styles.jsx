@@ -18,7 +18,7 @@ export const Tab = styled.button`
   font-family: inherit;
   white-space: nowrap;
   color: ${({ $active, theme }) => ($active ? theme.colors.primary : theme.colors.muted)};
-  border-bottom: 2px solid ${({ $active, theme }) => ($active ? theme.colors.primary : 'transparent')};
+  border-bottom: 4px solid ${({ $active, theme }) => ($active ? theme.colors.primary : 'transparent')};
   margin-bottom: -1px;
   transition: color 0.15s ease, border-color 0.15s ease;
 
