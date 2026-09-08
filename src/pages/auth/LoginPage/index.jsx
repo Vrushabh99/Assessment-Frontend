@@ -85,7 +85,6 @@ export function LoginPage() {
             onSuccess={async (res) => {
               await googleLogin(res);
             }}
-            useOneTap
             theme="filled_blue"       
             size="large"               
             shape="rectangle"              
