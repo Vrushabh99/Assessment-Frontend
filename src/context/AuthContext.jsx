@@ -1,13 +1,21 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '../api/client'
+import { useNavigate } from 'react-router-dom'
+import { useRef } from 'react'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient()
+  const authChannelRef = useRef(null);
+  if (!authChannelRef.current) {
+    authChannelRef.current = new BroadcastChannel('auth-channel')
+  }
+  
+  
   const sessionQuery = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
@@ -19,8 +27,16 @@ export function AuthProvider({ children }) {
         throw error
       }
     },
-    staleTime: 5 * 60 * 1000,
   })
+  
+  useEffect(() => {
+    authChannelRef.current.onmessage = (e) => {
+      if (e.data.type === 'logout') {
+        queryClient.clear();
+        sessionQuery.refetch();
+      }
+    }
+  }, [authChannelRef])
 
   const loginMutation = useMutation({
     mutationFn: (credentials) => apiRequest('/auth/login', {
@@ -44,7 +60,10 @@ export function AuthProvider({ children }) {
   
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest('/auth/logout', { method: 'POST' }),
-    onSuccess: () => { queryClient.clear() },
+    onSuccess: () => {
+      authChannelRef.current.postMessage({ type: 'logout'});
+      queryClient.clear();
+    },
   })
 
   const value = useMemo(() => ({

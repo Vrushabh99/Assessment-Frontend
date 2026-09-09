@@ -5,15 +5,22 @@ import { GlobalStyle } from './styles/GlobalStyle'
 import { ThemeProvider } from 'styled-components'
 import { theme } from './styles/theme'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
+      staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
+  queryCache: new QueryCache({
+    onSuccess: (data, query) => {
+      console.log(`Query ${query.queryKey} — hit: ${query.state.dataUpdateCount === 1 ? false : true}`)
+    },
+  }),
 })
 
 ReactDOM.createRoot(document.getElementById('root')).render(

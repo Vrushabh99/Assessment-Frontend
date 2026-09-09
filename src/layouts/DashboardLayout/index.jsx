@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material'
 import Avatar from '@mui/material/Avatar'
 import { useNavigate } from 'react-router-dom'
@@ -12,9 +12,10 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
   const { logout, user } = useAuth()
   const [profileAnchor, setProfileAnchor] = useState(null)
 
+
   const signOut = async () => {
     await logout()
-    navigate('/login', { replace: true })
+    navigate('/login');
   }
 
   return (
@@ -72,7 +73,7 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
                 <Typography variant="subtitle2">{user ? `${user.firstName} ${user.lastName}` : role}</Typography>
                 <Typography variant="caption" color="text.secondary">{user?.email || role}</Typography>
               </Box>
-              <MenuItem onClick={signOut} sx={{ color: theme.colors.danger, fontWeight: 700 }}>Sign out</MenuItem>
+              <MenuItem onClick={() => signOut()} sx={{ color: theme.colors.danger, fontWeight: 700 }}>Sign out</MenuItem>
             </Menu>
           </UserMenu>
         </Topbar>
