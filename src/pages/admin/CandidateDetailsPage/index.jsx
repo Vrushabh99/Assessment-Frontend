@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "../../../layouts/DashboardLayout";
 import { CommonLoader } from "../../../components/ui/CommonLoader";
-import { AssessmentCard, AssessmentList, AssessmentTitle, CandidateCard, Card, CardActions, InfoItem, InfoLabel, InfoValue, Metadata, Muted, Toolbar } from "./styles";
-import { candidateKeys, getCandidateAttempts } from "../../../api/candidates";
+import { ActionWrapper, AssessmentCard, AssessmentList, AssessmentTitle, CandidateCard, Card, CardActions, InfoItem, InfoLabel, InfoValue, Metadata, Muted, Toolbar } from "./styles";
+import { CandidateKeys, getCandidateAttempts } from "../../../api/candidates";
 import { useNavigate, useParams } from "react-router-dom";
 import { Pill } from "../../../components/ui/Pill";
 import { Menu } from "../../../components/ui/Menu";
@@ -10,6 +10,7 @@ import { Pagination } from "../../../components/ui/Pagination";
 import { useState } from "react";
 import { DropDown } from "../../../components/ui/DropDown";
 import { formatDate } from "../../../utils/helpers";
+import { Button } from "../../../components/ui/Button";
 
 
 export function CandidateDetailsPage() {
@@ -18,9 +19,17 @@ export function CandidateDetailsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
   const limit = 10;
+
+
+  const getParams = () => ({
+    page,
+    limit,
+    status: statusFilter === 'all' ? '' : statusFilter
+  })
+
   const query = useQuery({
-    queryKey: candidateKeys.candidateAttempts(candidateId, page, limit, statusFilter === 'all' ? '' : statusFilter),
-    queryFn: () => getCandidateAttempts({ candidateId, page, limit, status: statusFilter === 'all' ? '' : statusFilter })
+    queryKey: CandidateKeys.candidateAttempts(candidateId, getParams()),
+    queryFn: () => getCandidateAttempts(candidateId, getParams())
   })
 
   if (query.isLoading) return <DashboardLayout title="Candidate Details" role="Administrator"><CommonLoader label="Loading assessment..." /></DashboardLayout>
@@ -56,6 +65,14 @@ export function CandidateDetailsPage() {
   }
   return (
     <DashboardLayout title="Candidate Details" role="Administrator" hideNavigation>
+        <ActionWrapper>
+          <Button
+            variant="primary"
+            onClick={() => navigate(-1)}
+            >
+            Back
+          </Button>
+        </ActionWrapper>
         <CandidateCard>
           <InfoItem>
             <InfoLabel>Student</InfoLabel>

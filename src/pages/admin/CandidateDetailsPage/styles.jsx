@@ -76,3 +76,9 @@ export const InfoValue = styled.span`
   font-weight: 600;
   font-size: 1.1rem;
 `
+
+export const ActionWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+`

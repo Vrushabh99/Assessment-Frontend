@@ -2,7 +2,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { useState } from 'react'
-import { getSubmission, submissionKeys } from '../../../api/candidates'
+import { getSubmission, SubmissionKeys } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -168,7 +168,7 @@ export function ResultViewPage() {
   const { assignmentId } = useParams()
 
   const submissionQuery = useQuery({
-    queryKey: submissionKeys.detail( assignmentId),
+    queryKey: SubmissionKeys.detail(assignmentId),
     queryFn: () => getSubmission(assignmentId),
   })
 
@@ -189,10 +189,8 @@ export function ResultViewPage() {
     )
   }
 
-
   const submission = submissionQuery.data
   const pageTitle = 'View Result'
-
 
   return (
     <DashboardLayout title={pageTitle} role="Candidate">

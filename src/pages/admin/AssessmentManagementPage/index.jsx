@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { assessmentKeys, deleteAssessment, listAssessments } from '../../../api/assessments'
+import { AssessmentKeys, deleteAssessment, listAssessments } from '../../../api/assessments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { Menu } from '../../../components/ui/Menu'
@@ -80,16 +80,24 @@ export function AssessmentManagementPage() {
   const debouncedSearch = useDebounce(search);
 
   useEffect(() => setPage(1), [debouncedSearch]);
-  
+
+  const getParams = () => {
+    return {
+      page: page || 1,
+      limit: limit || 20,
+      search: debouncedSearch || '',
+      status: status === 'all' ? '' : status, 
+    }
+  }
   const assessmentsQuery = useQuery({
-    queryKey: [...assessmentKeys.all, { search: debouncedSearch, status, page, limit }],
-    queryFn: () => listAssessments({ page, limit, search: debouncedSearch, status: status === 'all' ? '' : status }),
+    queryKey: AssessmentKeys.all(getParams()),
+    queryFn: () => listAssessments(getParams()),
   })
   
   const assessments = useMemo(() => assessmentsQuery.data?.assessments || [], [assessmentsQuery.data])
   const deleteMutation = useMutation({
     mutationFn: deleteAssessment,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: AssessmentKeys.all }),
   })
 
   const handleDelete = async (assessmentId) => {

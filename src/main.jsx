@@ -23,6 +23,7 @@ const queryClient = new QueryClient({
   }),
 })
 
+window.__TANSTACK_QUERY_CLIENT__ = queryClient;
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>

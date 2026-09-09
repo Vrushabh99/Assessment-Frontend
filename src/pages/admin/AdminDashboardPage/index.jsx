@@ -1,9 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import styled from 'styled-components'
-import { getDashboardStats } from '../../../api/dashboard'
+import { DashboardKeys, getDashboardStats } from '../../../api/dashboard'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
+import { Button } from '../../../components/ui/Button'
 
+const ActionWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
 const PageGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -32,10 +37,12 @@ const EmptyState = styled.p`padding: 28px 20px; color: ${({ theme }) => theme.co
 
 export function AdminDashboardPage() {
   const query = useQuery({
-    queryKey: ['dashboard'],
+    queryKey: DashboardKeys.dashboard,
     queryFn: () => getDashboardStats(),
   });
 
+  const queryClient = useQueryClient();
+  const onRefresh = () => queryClient.invalidateQueries({ queryKey: DashboardKeys.dashboard})
   const { data, isLoading, isError, error } = query || {};
   
   return (
@@ -43,7 +50,12 @@ export function AdminDashboardPage() {
       {isLoading && <CommonLoader label="Loading dashboard..." />}
       {isError && <EmptyState role="alert">{error.message}</EmptyState>}
       {data && (
-
+        <>
+        <ActionWrapper>
+        <Button onClick={onRefresh}>
+          Refresh
+        </Button>
+        </ActionWrapper>
         <PageGrid>
         <Card>Assessments<StatValue>{data.totalAssessments}</StatValue></Card>
         <Card>Assignments<StatValue>{data.totalAssignments}</StatValue></Card>
@@ -54,6 +66,7 @@ export function AdminDashboardPage() {
         <Card>Assigned candidates<StatValue>{data.candidatesAssigned}</StatValue></Card>
         <Card>Submissions<StatValue>{data.totalSubmissions}</StatValue></Card>
       </PageGrid>
+      </>
       )}
     </DashboardLayout>
   )

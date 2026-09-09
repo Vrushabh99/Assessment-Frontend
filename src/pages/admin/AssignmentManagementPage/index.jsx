@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { assignmentKeys, deleteAssignment, listAssignments, cancelAssignment } from '../../../api/assignments'
+import { AssignmentKeys, deleteAssignment, listAssignments, cancelAssignment } from '../../../api/assignments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Menu } from '../../../components/ui/Menu'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -99,17 +99,26 @@ export function AssignmentManagementPage() {
 
   useEffect(() => setPage(1), [debouncedSearch]);
 
+  const getParams = () => {
+    return {
+      page: page || 1,
+      limit: limit || 20,
+      search: debouncedSearch || '',
+      status: status === 'all' ? '' : status, 
+    }
+  }
+
   const query = useQuery({
-    queryKey: [...assignmentKeys.all, { search: debouncedSearch, status, page, limit }],
-    queryFn: () => listAssignments({ search: debouncedSearch, page, limit, status: status === 'all' ? '' : status }),
+    queryKey: AssignmentKeys.all(getParams()),
+    queryFn: () => listAssignments(getParams()),
   })
   const deleteMutation = useMutation({
     mutationFn: deleteAssignment,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: AssignmentKeys.prefix }),
   })
   const cancelMutation = useMutation({
     mutationFn: cancelAssignment,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: AssignmentKeys.prefix }),
   })
 
   const assignments = query?.data?.assignments || [];

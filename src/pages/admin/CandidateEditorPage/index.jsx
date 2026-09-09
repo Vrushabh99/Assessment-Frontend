@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { candidateKeys, createCandidate, getCandidate, updateCandidate } from '../../../api/candidates'
+import { CandidateKeys, createCandidate, getCandidate, updateCandidate } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -35,7 +35,7 @@ export function CandidateEditorPage() {
   const queryClient = useQueryClient()
   const [values, setValues] = useState(emptyCandidate)
   const candidateQuery = useQuery({
-    queryKey: candidateKeys.detail(candidateId),
+    queryKey: CandidateKeys.detail(candidateId),
     queryFn: () => getCandidate(candidateId),
     enabled: Boolean(candidateId),
   })
@@ -43,7 +43,10 @@ export function CandidateEditorPage() {
     mutationFn: (candidate) => candidateId
       ? updateCandidate({ id: candidateId, ...candidate })
       : createCandidate(candidate),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CandidateKeys.prefix });
+      queryClient.invalidateQueries({ queryKey: CandidateKeys.detail(candidateId) });
+    }
   })
 
   useEffect(() => {

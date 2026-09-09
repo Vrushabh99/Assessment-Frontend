@@ -1,13 +1,16 @@
 import { apiRequest } from './client'
 
-export const questionKeys = {
-  all: ['questions'],
+export const QuestionKeys = {
+  prefix: ['questions'],
+  all: ({page = 1, limit = 20, search = '', status, type }) => ['questions', {page, limit, search, status, type }],
   detail: (id) => ['questions', id],
 }
 
-export async function listQuestions({ page = 1, limit = 25, search = '' } = {}) {
+export async function listQuestions({ page = 1, limit = 20, search = '', type, status } = {}) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
   if (search) params.set('search', search)
+  if (type) params.set('type', type)
+  if (status) params.set('status', status)
   const response = await apiRequest(`/admin/questions?${params.toString()}`)
   const data = response.data
   if (Array.isArray(data)) return { items: data, total: data.length, totalPages: 1 }

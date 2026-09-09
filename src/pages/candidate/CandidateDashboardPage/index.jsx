@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { attemptKeys, listMyAssessments } from '../../../api/attempts'
+import { listMyAssessments, MyAttemptKeys } from '../../../api/attempts'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
@@ -118,15 +118,20 @@ const StatusPill = ({ assessment }) => {
 
 export function CandidateDashboardPage() {
   const navigate = useNavigate()
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('assigned')
   const [page, setPage] = useState(1);
-  const limit = 25;
+  const limit = 20;
+
+  const getParams = () => ({
+    page,
+    limit,
+    status: TAB_FILTERS.find(ele => ele.id === activeTab)?.statuses[0],
+  });
+
   const query = useQuery({
-    queryKey: attemptKeys.all({ page, limit, status: activeTab }),
+    queryKey: MyAttemptKeys.all(getParams()),
     queryFn: () => {
-      const status = TAB_FILTERS.find(ele => ele.id === activeTab)?.statuses[0];
-      return listMyAssessments({ status });
+      return listMyAssessments(getParams());
     },
   })
 

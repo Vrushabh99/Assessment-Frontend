@@ -1,0 +1,75 @@
+# Query: assignmentKeys
+# Flags: CaseSensitive WordMatch
+# Including: ./Assessment-Frontend/src
+# ContextLines: 1
+
+17 results - 2 files
+
+src/pages/admin/QuestionsDashboardPage/AssignmentKeys.code-search:
+   1: # Query: assignmentKeys
+   2  # Flags: CaseSensitive
+
+   9     13    22  import { apiRequest } from '../../../api/client'
+  10:    14:   23: import { assignAssessment, assignmentKeys, getAssignmentByAssessment, updateAssignment } from '../../../api/assignments'
+  11     15    24  import { CandidateKeys, listCandidates } from '../../../api/candidates'
+
+  13     17    55    const Query = useQuery({
+  14:    18:   56:     queryKey: assignmentKeys['assessment-assignment'](assessmentId),
+  15     19    57      queryFn: () => getAssignmentByAssessment(assessmentId),
+
+  17     22      4  import { useState, useEffect } from 'react'
+  18:    23:     5: import { getAssignment, assignmentKeys, listAssignmentCandidates } from '../../../api/assignments'
+  19     24      6  import { DashboardLayout } from '../../../layouts/DashboardLayout'
+
+  21     26    285    const assignmentQuery = useQuery({
+  22:    27:   286:     queryKey: assignmentKeys.detail(assignmentId),
+  23     28    287      queryFn: () => getAssignment(assignmentId),
+
+  25     30    291    const candidatesQuery = useQuery({
+  26:    31:   292:     queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter }),
+  27     32    293      queryFn: () => listAssignmentCandidates(assignmentId, {
+
+  29     34    304      onSuccess: () => {
+  30:    35:   305:       queryClient.invalidateQueries({ queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter })})
+  31     36    306        setSnackbar({ open: true, message: `Attempt resetted for ${currentCandidate.fullName}.`})
+
+  33     39      4  import styled from 'styled-components'
+  34:    40:     5: import { assignmentKeys, deleteAssignment, listAssignments, cancelAssignment } from '../../../api/assignments'
+  35     41      6  import { DashboardLayout } from '../../../layouts/DashboardLayout'
+
+  37     43    111    const query = useQuery({
+  38:    44:   112:     queryKey: assignmentKeys.all(getParams()),
+  39     45    113      queryFn: () => listAssignments(getParams()),
+
+  41     47    116      mutationFn: deleteAssignment,
+  42:    48:   117:     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+  43     49    118    })
+
+  45     51    120      mutationFn: cancelAssignment,
+  46:    52:   121:     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+  47     53    122    })
+
+  49    120     13  import { ProctoringLogAccordion } from './ProctoringLogAccordion'
+  50:   121:    14: import { assignmentKeys } from '../../../api/assignments'
+  51    122     15  import { Alert, Snackbar } from '@mui/material'
+
+  53    124    252        onSuccess: () => {
+  54:   125:   253:         queryClient.invalidateQueries({ queryKey: assignmentKeys.detail(assignmentId)})
+  55    126    254          setSnackbar({ open: true, message: `Attempt resetted for ${submission.candidate.fullName}.`})
+
+  58     13  import { ProctoringLogAccordion } from './ProctoringLogAccordion'
+  59:    14: import { assignmentKeys } from '../../../api/assignments'
+  60     15  import { Alert, Snackbar } from '@mui/material'
+
+  62    252        onSuccess: () => {
+  63:   253:         queryClient.invalidateQueries({ queryKey: assignmentKeys.detail(assignmentId)})
+  64    254          setSnackbar({ open: true, message: `Attempt resetted for ${submission.candidate.fullName}.`})
+
+src/pages/admin/SubmissionViewPage/index.jsx:
+   13  import { ProctoringLogAccordion } from './ProctoringLogAccordion'
+   14: import { assignmentKeys } from '../../../api/assignments'
+   15  import { Alert, Snackbar } from '@mui/material'
+
+  252        onSuccess: () => {
+  253:         queryClient.invalidateQueries({ queryKey: assignmentKeys.detail(assignmentId)})
+  254          setSnackbar({ open: true, message: `Attempt resetted for ${submission.candidate.fullName}.`})

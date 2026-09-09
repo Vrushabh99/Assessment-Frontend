@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
-import { getAssignment, assignmentKeys, listAssignmentCandidates } from '../../../api/assignments'
+import { getAssignment, AssignmentKeys, listAssignmentCandidates } from '../../../api/assignments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -14,6 +14,7 @@ import { Pagination } from '../../../components/ui/Pagination'
 import { formatDate, formatMinutes } from '../../../utils/helpers'
 import { resetCandidateAttempt } from '../../../api/submissions'
 import { Alert, Snackbar } from '@mui/material'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 const TABLE_BREAKPOINT = '768px'
 
@@ -262,47 +263,46 @@ const StatusPill = ({ submission }) => {
 
 export function AssignmentDetailsPage() {
   const navigate = useNavigate()
-  const { assignmentId } = useParams()
-  const [searchInput, setSearchInput] = useState('')
-  const [ snackbar, setSnackbar] = useState({ open: false, message: ''})
-  const [ currentCandidate, setCurrentCandidate] = useState(null);
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
   const queryClient = useQueryClient()
+  const { assignmentId } = useParams()
+  const [search, setSearch] = useState('')
+  const [snackbar, setSnackbar] = useState({ open: false, message: ''})
+  const [currentCandidate, setCurrentCandidate] = useState(null);
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+
+  const limit = 10
   
-  // Debounce search input (500ms delay)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput)
-      setCurrentPage(1)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchInput])
+  const debouncedSearch = useDebounce(search);
+
+  useEffect(() => setPage(1), [debouncedSearch, status])
 
   // Fetch assignment details
   const assignmentQuery = useQuery({
-    queryKey: assignmentKeys.detail(assignmentId),
+    queryKey: AssignmentKeys.detail(assignmentId),
     queryFn: () => getAssignment(assignmentId),
   })
 
+
+  const getCandidateParams = () => {
+    return {
+      page: page || 1,
+      limit: limit || 10,
+      search: debouncedSearch || '',
+      status: status === 'all' ? '' : status, 
+    }
+  }
+
   // Fetch candidates with pagination, search, and status from API
   const candidatesQuery = useQuery({
-    queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter }),
-    queryFn: () => listAssignmentCandidates(assignmentId, {
-      page: currentPage,
-      limit: itemsPerPage,
-      search: debouncedSearch,
-      status: statusFilter === 'all' ? '' : statusFilter,
-    }),
+    queryKey: AssignmentKeys['assignment-candidates'](assignmentId, getCandidateParams()),
+    queryFn: () => listAssignmentCandidates(assignmentId, getCandidateParams()),
   })
-
 
   const resetMutation = useMutation({
     mutationFn: (data) => resetCandidateAttempt(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: assignmentKeys.candidatesWithParams(assignmentId, { page: currentPage, search: debouncedSearch, status: statusFilter })})
+      queryClient.invalidateQueries({ queryKey: ['assignment-candidates', assignmentId]})
       setSnackbar({ open: true, message: `Attempt resetted for ${currentCandidate.fullName}.`})
     },
     onError: () => {
@@ -329,12 +329,14 @@ export function AssignmentDetailsPage() {
   const assignment = assignmentQuery.data.assignment;
   const assessment = assignment?.assessmentId || assignment?.assessment || {}
   const displayedCandidates = candidatesQuery.data?.candidates || []
+  const pagination = candidatesQuery.data?.pagination;
 
   const handleReset = async (candidate) => {
-    const { attemptId, fullName } = candidate;
-    setCurrentCandidate({ fullName });
+    const { attemptId, fullName, id } = candidate;
+    setCurrentCandidate({ fullName, id });
     await resetMutation.mutateAsync({ attemptId })
   }
+
   const getMenuItems = (candidate) => [
     {
       id: 'view',
@@ -414,7 +416,7 @@ export function AssignmentDetailsPage() {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => navigate(`/admin/assignments/${assignmentId}/edit`)}
+                onClick={() => navigate(`/admin/assessments/${assessment._id}/assign?edit`)}
               >
                 Edit
               </Button>
@@ -438,17 +440,17 @@ export function AssignmentDetailsPage() {
             <TextField
               id="student-search"
               placeholder="Search by name or email"
-              value={searchInput}
+              value={search}
               onChange={(e) => {
-                setSearchInput(e.target.value)
+                setSearch(e.target.value)
               }}
               style={{ flex: 1, minWidth: 300 }}
             />
             <DropDown
               id="submission-status-filter"
-              value={statusFilter}
+              value={status}
               onChange={(e) => {
-                setStatusFilter(e.target.value)
+                setStatus(e.target.value)
               }}
               options={[
                 { value: 'all', label: 'All statuses' },
@@ -564,14 +566,13 @@ export function AssignmentDetailsPage() {
                   </CandidateCard>
                 ))}
               </CandidateList>
-
-              {(candidatesQuery.data?.pagination?.totalPages || 1) > 1 && (
                 <Pagination
-                  currentPage={currentPage}
-                  totalPages={candidatesQuery.data?.pagination?.totalPages || 1}
-                  onPageChange={setCurrentPage}
+                  currentPage={page}
+                  totalPages={pagination?.totalPages || 1}
+                  totalItems={pagination?.total}
+                  onPageChange={setPage}
+                  itemLabel="candidates"
                 />
-              )}
             </>
           )}
         </Card>

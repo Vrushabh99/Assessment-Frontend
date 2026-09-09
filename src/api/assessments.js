@@ -1,7 +1,8 @@
 import { apiRequest } from './client'
 
-export const assessmentKeys = {
-  all: ['assessments'],
+export const AssessmentKeys = {
+  prefix: ['assessments'],
+  all: ({ page = 1, limit = 20, search = '', status = ''}) => ['assessments', { page, limit, search, status }],
   detail: (id) => ['assessments', id],
 }
 

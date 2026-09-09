@@ -2,7 +2,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { useState } from 'react'
-import { getSubmission, resetCandidateAttempt, submissionKeys, updateSubmissionGrade } from '../../../api/submissions'
+import { getSubmission, resetCandidateAttempt, SubmissionKeys, updateSubmissionGrade } from '../../../api/submissions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -11,7 +11,7 @@ import { NumberField } from '../../../components/ui/NumberField'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 import { ProctoringLogAccordion } from './ProctoringLogAccordion'
-import { assignmentKeys } from '../../../api/assignments'
+import { AssignmentKeys } from '../../../api/assignments'
 import { Alert, Snackbar } from '@mui/material'
 import { Card } from '../../../components/CommonStyles'
 const Container = styled.div`
@@ -175,14 +175,6 @@ const InfoValue = styled.div`
   flex-wrap: wrap;
 `
 
-const SuccessMessage = styled.div`
-  padding: 12px 16px;
-  background-color: ${({ theme }) => theme.colors.successBackground};
-  color: ${({ theme }) => theme.colors.successText};
-  border-radius: 8px;
-  margin-bottom: 16px;
-  border-left: 4px solid ${({ theme }) => theme.colors.successText};
-`
 
 const formatDate = (value) => {
   if (!value) return 'N/A'
@@ -228,18 +220,19 @@ export function SubmissionViewPage() {
   const isGradingMode = location.pathname.includes('/grade')
 
   const [gradingData, setGradingData] = useState({})
-  const [successMessage, setSuccessMessage] = useState('')
   const queryClient = useQueryClient()
 
   const submissionQuery = useQuery({
-    queryKey: submissionKeys.detail( assignmentId, candidateId),
+    queryKey: SubmissionKeys.detail(assignmentId, candidateId),
     queryFn: () => getSubmission(assignmentId, candidateId),
   })
 
   const gradeMutation = useMutation({
     mutationFn: (gradeInfo) => updateSubmissionGrade(gradeInfo),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: submissionKeys.detail(assignmentId, candidateId) })
+      queryClient.invalidateQueries({ queryKey: SubmissionKeys.detail(assignmentId, candidateId) })
+      queryClient.invalidateQueries({ queryKey: ['assignment-candidates', assignmentId]})
+      queryClient.invalidateQueries({ queryKey: ['candidate-attempts', candidateId]})
       setSnackbar({ open: true, message: 'Grade saved successfully !!'})
     },
     onError: () => {
@@ -250,7 +243,9 @@ export function SubmissionViewPage() {
   const resetMutation = useMutation({
       mutationFn: (data) => resetCandidateAttempt(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: assignmentKeys.detail(assignmentId)})
+        queryClient.invalidateQueries({ queryKey: SubmissionKeys.detail(assignmentId, candidateId) })
+        queryClient.invalidateQueries({ queryKey: ['assignment-candidates', assignmentId]})
+        queryClient.invalidateQueries({ queryKey: ['candidate-attempts', candidateId]})
         setSnackbar({ open: true, message: `Attempt resetted for ${submission.candidate.fullName}.`})
       },
       onError: () => {
@@ -330,7 +325,12 @@ export function SubmissionViewPage() {
               >
                 Reset Attempt
               </Button>
-              <Button variant="primary" onClick={() => navigate(-1)}>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  navigate(-1)
+                }}
+              >
                 Back
               </Button>
             </HeaderActions>
@@ -366,7 +366,6 @@ export function SubmissionViewPage() {
           </SubmissionInfo>
         </Card>
 
-        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
         {submission && (<ProctoringLogAccordion events={submission.proctoringEvents}/>)}
         {submission.questions && submission.questions.length > 0 && (

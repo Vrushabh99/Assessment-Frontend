@@ -1,7 +1,12 @@
 import { apiRequest } from './client'
 
-export const attemptKeys = {
-  all: ({page, limit, status, search}) => ['myAssessments', page, limit, status, search],
+export const MyAttemptKeys = {
+  all: ({page = 1, limit = 20, status, search}) => ['myAssessments', page, limit, status, search],
+}
+
+export const candidateAssessmentKeys = {
+  detail: (assignmentId) => ['candidateAssessment',  assignmentId],
+  attempt: (assignmentId) => ['attemptState',  assignmentId],
 }
 
 export async function listMyAssessments({ page = 1, limit = 100, status = ''}) {
@@ -11,10 +16,6 @@ export async function listMyAssessments({ page = 1, limit = 100, status = ''}) {
   return response.data
 }
 
-export const candidateAssessmentKeys = {
-  detail: ( assignmentId) => ['candidateAssessment',  assignmentId],
-  attempt: ( assignmentId) => ['attemptState',  assignmentId],
-}
 
 export async function getCandidateAssessment({ assignmentId }) {
   const response = await apiRequest(`/candidate/assignments/${assignmentId}`)

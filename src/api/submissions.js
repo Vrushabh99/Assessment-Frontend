@@ -1,6 +1,7 @@
 import { apiRequest } from './client'
 
-export const submissionKeys = {
+export const SubmissionKeys = {
+  prefix: 'submission',
   detail: (assignmentId, candidateId) => ['submissions', assignmentId, candidateId],
 }
 

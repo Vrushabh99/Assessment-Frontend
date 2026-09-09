@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getAssessment, assessmentKeys } from '../../../api/assessments'
+import { getAssessment, AssessmentKeys } from '../../../api/assessments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -19,7 +19,10 @@ import { Card } from '../../../components/CommonStyles'
 export function AssessmentPreviewPage() {
   const { assessmentId } = useParams()
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
-  const query = useQuery({ queryKey: assessmentKeys.detail(assessmentId), queryFn: () => getAssessment(assessmentId) })
+  const query = useQuery({
+    queryKey: AssessmentKeys.detail(assessmentId),
+    queryFn: () => getAssessment(assessmentId)
+  })
   if (query.isLoading) return <DashboardLayout title="Assessment details" role="Administrator"><CommonLoader label="Loading assessment..." /></DashboardLayout>
   if (query.isError) return <DashboardLayout title="Assessment details" role="Administrator"><Muted role="alert">{query.error.message}</Muted></DashboardLayout>
   const assessment = query.data

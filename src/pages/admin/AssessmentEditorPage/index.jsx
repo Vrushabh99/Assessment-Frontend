@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { listQuestions, normalizeQuestion, questionKeys } from '../../../api/questions'
-import { assessmentKeys, createAssessment, getAssessment, updateAssessment } from '../../../api/assessments'
+import { listQuestions, normalizeQuestion, QuestionKeys } from '../../../api/questions'
+import { AssessmentKeys, createAssessment, getAssessment, updateAssessment } from '../../../api/assessments'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { AssessmentForm } from '../../../components/AssessmentForm'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -13,21 +13,30 @@ export function AssessmentEditorPage() {
   const { assessmentId } = useParams()
   const queryClient = useQueryClient()
   const assessmentQuery = useQuery({
-    queryKey: assessmentKeys.detail(assessmentId),
+    queryKey: AssessmentKeys.detail(assessmentId),
     queryFn: () => getAssessment(assessmentId),
     enabled: Boolean(assessmentId),
   })
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const limit = 25
+  const limit = 20
 
   const debouncedSearch = useDebounce(search);
 
   useEffect(() => setPage(1), [debouncedSearch]);
 
+  const getParams = () => {
+    return {
+      page: page || 1,
+      limit: limit || 20,
+      search: debouncedSearch || '',
+      status: 'published',
+    }
+  }
+
   const questionsQuery = useQuery({
-    queryKey: [...questionKeys.all, { page, limit, search: debouncedSearch }],
-    queryFn: () => listQuestions({ page, limit, search: debouncedSearch }),
+    queryKey: QuestionKeys.all(getParams()),
+    queryFn: () => listQuestions(getParams()),
     placeholderData: (previousData) => previousData,
   })
   const questions = (questionsQuery.data?.items || []).map(normalizeQuestion)
@@ -35,7 +44,7 @@ export function AssessmentEditorPage() {
     mutationFn: (assessment) => assessmentId
       ? updateAssessment({ id: assessmentId, ...assessment })
       : createAssessment(assessment),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: AssessmentKeys.prefix }),
   })
 
   const handleSave = async (assessment) => {

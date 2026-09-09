@@ -1,11 +1,11 @@
 import { apiRequest } from './client'
 
-export const assignmentKeys = {
-  all: ['assignments'],
+export const AssignmentKeys = {
+  prefix: ['assignments'],
+  all: ({ page = 1, limit = 20, search = '', status = ''}) => ['assignments', { page, limit, search, status }],
   detail: (id) => ['assignments', id],
   'assessment-assignment': (id) => ['assessment-assignment', id],
-  candidates: (id) => ['assignments', id, 'candidates'],
-  candidatesWithParams: (id, params) => ['assignments', id, 'candidates', params],
+  'assignment-candidates': (assignmentId, params) => ['assignment-candidates', assignmentId, params],
 };
 
 export async function listAssignments({ page = 1, limit = 100, status = '', search } = {}) {

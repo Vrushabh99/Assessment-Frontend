@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { candidateKeys, deleteCandidate, listCandidates } from '../../../api/candidates'
+import { CandidateKeys, deleteCandidate, listCandidates } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { Menu } from '../../../components/ui/Menu'
@@ -10,6 +10,7 @@ import { Pagination } from '../../../components/ui/Pagination'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { TextField } from '../../../components/ui/TextField'
 import { useDebounce } from '../../../hooks/useDebounced'
+import { DashboardKeys } from '../../../api/dashboard'
 
 const Header = styled.div`
   display: flex;
@@ -70,7 +71,7 @@ export function CandidateManagementPage() {
   useEffect(() => setPage(1), [debouncedSearch]);
 
   const candidatesQuery = useQuery({
-    queryKey: [...candidateKeys.all, { search: debouncedSearch, page, limit }],
+    queryKey: CandidateKeys.all({ search: debouncedSearch, page, limit }),
     queryFn: () => listCandidates({ search: debouncedSearch, page, limit }),
   })
   const candidates = useMemo(() => candidatesQuery.data?.candidates || [], [candidatesQuery.data])
@@ -79,7 +80,9 @@ export function CandidateManagementPage() {
   const totalPages = pagination?.totalPages ?? 1
   const deleteMutation = useMutation({
     mutationFn: deleteCandidate,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-candidates'] })
+    }
   })
 
   const handleDelete = async (candidateId) => {
@@ -110,6 +113,7 @@ export function CandidateManagementPage() {
             placeholder="Search by name or email"
             value={search}
             onChange={(event) => { setSearch(event.target.value); setPage(1) }}
+            style={{width: 270}}
           />
         </Toolbar>
         {candidatesQuery.isLoading && <CommonLoader label="Loading candidates..." />}

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createQuestion, getQuestion, normalizeQuestion, questionKeys, updateQuestion } from '../../../api/questions'
+import { createQuestion, getQuestion, normalizeQuestion, QuestionKeys, updateQuestion } from '../../../api/questions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { QuestionForm } from '../../../components/QuestionForm'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
@@ -10,7 +10,7 @@ export function QuestionEditorPage() {
   const { questionId } = useParams()
   const queryClient = useQueryClient()
   const questionQuery = useQuery({
-    queryKey: questionKeys.detail(questionId),
+    queryKey: QuestionKeys.detail(questionId),
     queryFn: () => getQuestion(questionId),
     enabled: Boolean(questionId),
   })
@@ -18,14 +18,16 @@ export function QuestionEditorPage() {
     mutationFn: (values) => questionId
       ? updateQuestion({ id: questionId, ...values })
       : createQuestion(values),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: questionKeys.all }),
+    onSuccess: () => {
+      navigate('/admin/questions')
+      queryClient.invalidateQueries({ queryKey: QuestionKeys.prefix })
+    },
   })
   const question = questionQuery.data ? normalizeQuestion(questionQuery.data) : undefined
 
   const handleSave = async (values) => {
     const { id, ...payload } = values
     await saveMutation.mutateAsync({ ...payload, points: Number(payload.points), ...(questionId ? { id } : {}) })
-    navigate('/admin/questions')
   }
 
   if (questionId && questionQuery.isLoading) return <DashboardLayout title="Edit question" role="Administrator"><CommonLoader label="Loading question..." /></DashboardLayout>

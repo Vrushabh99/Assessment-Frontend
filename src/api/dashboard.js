@@ -1,7 +1,7 @@
 import { apiRequest } from './client'
 
-export const dashboard = {
-  dashboard: ['dashboard'],
+export const DashboardKeys = {
+  dashboard: ['Dashboard'],
 };
 
 export async function getDashboardStats() {

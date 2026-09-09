@@ -1,9 +1,15 @@
 import { apiRequest } from './client'
 
-export const candidateKeys = {
-  all: ['candidates'],
-  detail: (id) => ['candidates', id],
-  candidateAttempts: (id, page, limit, status) => ['candidate-attempts', id, page, limit, status],
+export const CandidateKeys = {
+  prefix: ['candidates'],
+  all:  ({search = '', page = 1, limit = 20 }) => ['candidates', { search, page, limit }],
+  detail: (id) => ['candidate', id],
+  candidateAttempts: ({ candidateId, page, limit, status }) => ['candidate-attempts', candidateId, { page, limit, status }],
+}
+
+export const SubmissionKeys = {
+  prefix: ['submission'],
+  detail: (assignmentId) => ['submission', assignmentId],
 }
 
 export async function listCandidates({ page = 1, limit = 50, search = '' } = {}) {
@@ -18,7 +24,7 @@ export async function getCandidate(id) {
   return response.data
 }
 
-export async function getCandidateAttempts({ candidateId, page = 1, limit = 50, status = '' }) {
+export async function getCandidateAttempts(candidateId, { page = 1, limit = 50, status = '' }) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
   if (status) {
     params.set('status', status);
@@ -46,10 +52,6 @@ export async function updateCandidate({ id, ...candidate }) {
 export async function deleteCandidate(id) {
   const response = await apiRequest(`/admin/candidates/${id}`, { method: 'DELETE' })
   return response.data
-}
-
-export const submissionKeys = {
-  detail: (assignmentId, candidateId) => ['submissions', assignmentId, candidateId],
 }
 
 export async function getSubmission(assignmentId, candidateId) {

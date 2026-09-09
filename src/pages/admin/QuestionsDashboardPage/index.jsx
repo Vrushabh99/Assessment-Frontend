@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { listQuestions, normalizeQuestion, questionKeys } from '../../../api/questions'
+import { listQuestions, normalizeQuestion, QuestionKeys } from '../../../api/questions'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { QuestionTable } from '../../../components/QuestionTable'
 import { Button } from '../../../components/ui/Button'
@@ -36,6 +36,7 @@ const Toolbar = styled.div`
   @media (max-width: 640px) { flex-direction: column; padding: 16px 10px; }
 `
 
+
 export function QuestionsDashboardPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -47,20 +48,24 @@ export function QuestionsDashboardPage() {
 
   useEffect(() => setPage(1), [debouncedSearch])
 
+  const getParams = () => {
+    return {
+      page: page || 1,
+      limit: limit || 20,
+      search: debouncedSearch || '',
+      status: status === 'all' ? '' : status, 
+      type: type === 'all' ? '' : type, 
+    }
+  }
+
   const questionsQuery = useQuery({
-    queryKey: [...questionKeys.all, { page, limit, search: debouncedSearch }],
-    queryFn: () => listQuestions({ page, limit, search: debouncedSearch }),
+    queryKey: QuestionKeys.all(getParams()),
+    queryFn: () => listQuestions(getParams()),
     placeholderData: (previousData) => previousData,
   })
   const questions = (questionsQuery.data?.items || []).map(normalizeQuestion)
 
-  const filteredQuestions = useMemo(() => questions.filter((question) => {
-    const matchesSearch = question.questionText.toLowerCase().includes(search.toLowerCase())
-      || question.id.toLowerCase().includes(search.toLowerCase())
-    const matchesType = type === 'all' || question.type === type
-    const matchesStatus = status === 'all' || question.status === status
-    return matchesSearch && matchesType && matchesStatus
-  }), [questions, search, status, type])
+  const filteredQuestions = questions;
 
   if (questionsQuery.isLoading) return <DashboardLayout title="Questions" role="Administrator"><CommonLoader label="Loading questions..." /></DashboardLayout>
   if (questionsQuery.isError) return <DashboardLayout title="Questions" role="Administrator"><Muted role="alert">{questionsQuery.error.message}</Muted></DashboardLayout>

@@ -18,16 +18,17 @@ import {
   Typography,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '../../../api/client'
-import { assignAssessment, assignmentKeys, getAssignmentByAssessment, updateAssignment } from '../../../api/assignments'
-import { candidateKeys, listCandidates } from '../../../api/candidates'
+import { assignAssessment, AssignmentKeys, getAssignmentByAssessment, updateAssignment } from '../../../api/assignments'
+import { CandidateKeys, listCandidates } from '../../../api/candidates'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Button } from '../../../components/ui/Button'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { Form, FormHeader, Page, Actions, Summary, SummaryItem, DurationGroup } from './styles'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 const defaultViolationLimits = { tab_switch: 3, window_blur: 3, fullscreen_exit: 2, copy: 2, paste: 2, right_click: 5 }
 const violationLabels = { tab_switch: 'Tab switch', window_blur: 'Window blur', fullscreen_exit: 'Fullscreen exit', copy: 'Copy', paste: 'Paste', right_click: 'Right click' }
@@ -50,10 +51,11 @@ const normalizeCandidates = (payload) => {
 
 export function AssignAssessmentPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { assessmentId } = useParams()
 
   const Query = useQuery({
-    queryKey: assignmentKeys['assessment-assignment'](assessmentId),
+    queryKey: AssignmentKeys['assessment-assignment'](assessmentId),
     queryFn: () => getAssignmentByAssessment(assessmentId),
   })
 
@@ -71,6 +73,8 @@ export function AssignAssessmentPage() {
   const [step, setStep] = useState(0)
 
 
+  const debouncedCandidateSearch = useDebounce(candidateSearch);
+
   const {
     assessment = {},
     assignment = {},
@@ -78,12 +82,20 @@ export function AssignAssessmentPage() {
   } = Query?.data || {};
 
   const isEdit = Boolean(assignment._id)
+
+  const getCandidateParams = () => {
+    return {
+      page: 1,
+      limit: 100,
+      search: debouncedCandidateSearch || '',
+    }
+  }
   const candidatesQuery = useQuery({
-    queryKey: [...candidateKeys.all, { search: candidateSearch }],
-    queryFn: () => listCandidates({ search: candidateSearch, limit: 100 }),
+    queryKey: CandidateKeys.all(getCandidateParams()),
+    queryFn: () => listCandidates(getCandidateParams()),
   })
 
-  const candidatesPerPage = 8
+  const candidatesPerPage = 10
   const candidateOptions = normalizeCandidates(candidatesQuery.data)
   const candidatePageCount = Math.max(1, Math.ceil(candidateOptions.length / candidatesPerPage))
   const visibleCandidates = candidateOptions.slice((candidatePage - 1) * candidatesPerPage, candidatePage * candidatesPerPage)
@@ -175,6 +187,8 @@ export function AssignAssessmentPage() {
       if (skipped.alreadyAssigned?.length) message += ` ${skipped.alreadyAssigned.length} were already assigned to this assessment.`
       if (skipped.invalidCandidateIds?.length) message += ` ${skipped.invalidCandidateIds.length} candidate ID(s) were invalid.`
       setSnackbar({ open: true, message, severity: 'success' })
+      queryClient.invalidateQueries({ queryKey: ['assessment-assignment', assessmentId] })
+      queryClient.invalidateQueries({ queryKey: AssignmentKeys.prefix })
       navigate(isEdit ? '/admin/assignments' : '/admin/assessments')
     } catch (error) {
       setSnackbar({ open: true, message: error.message, severity: 'error' })
