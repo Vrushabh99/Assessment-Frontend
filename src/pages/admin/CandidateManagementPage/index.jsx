@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
@@ -9,6 +9,7 @@ import { Menu } from '../../../components/ui/Menu'
 import { Pagination } from '../../../components/ui/Pagination'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { TextField } from '../../../components/ui/TextField'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 const Header = styled.div`
   display: flex;
@@ -63,9 +64,14 @@ export function CandidateManagementPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const limit = 20;
+  const debouncedSearch = useDebounce(search);
+
+
+  useEffect(() => setPage(1), [debouncedSearch]);
+
   const candidatesQuery = useQuery({
-    queryKey: [...candidateKeys.all, { search, page, limit }],
-    queryFn: () => listCandidates({ search, page, limit }),
+    queryKey: [...candidateKeys.all, { search: debouncedSearch, page, limit }],
+    queryFn: () => listCandidates({ search: debouncedSearch, page, limit }),
   })
   const candidates = useMemo(() => candidatesQuery.data?.candidates || [], [candidatesQuery.data])
   const pagination = candidatesQuery.data?.pagination

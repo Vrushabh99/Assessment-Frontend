@@ -6,6 +6,7 @@ import { assessmentKeys, createAssessment, getAssessment, updateAssessment } fro
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { AssessmentForm } from '../../../components/AssessmentForm'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 export function AssessmentEditorPage() {
   const navigate = useNavigate()
@@ -17,14 +18,13 @@ export function AssessmentEditorPage() {
     enabled: Boolean(assessmentId),
   })
   const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const limit = 25
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
-    return () => clearTimeout(timeout)
-  }, [search])
-  useEffect(() => setPage(1), [debouncedSearch])
+
+  const debouncedSearch = useDebounce(search);
+
+  useEffect(() => setPage(1), [debouncedSearch]);
+
   const questionsQuery = useQuery({
     queryKey: [...questionKeys.all, { page, limit, search: debouncedSearch }],
     queryFn: () => listQuestions({ page, limit, search: debouncedSearch }),

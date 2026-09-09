@@ -11,6 +11,7 @@ import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { Pagination } from '../../../components/ui/Pagination'
 import { formatDate, formatMinutes, isOlderTime } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 const Header = styled.div`
   display: flex;
@@ -85,25 +86,18 @@ const statusTone = {
   expired: 'warning',
 }
 
-const getAssignments = (data) => data?.assignments || data?.items || []
-
-
 
 export function AssignmentManagementPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const limit = 20
 
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
-    return () => clearTimeout(timeout)
-  }, [search])
-  
-  useEffect(() => setPage(1), [debouncedSearch])
+  const debouncedSearch = useDebounce(search);
+
+  useEffect(() => setPage(1), [debouncedSearch]);
 
   const query = useQuery({
     queryKey: [...assignmentKeys.all, { search: debouncedSearch, status, page, limit }],

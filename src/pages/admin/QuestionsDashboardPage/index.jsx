@@ -10,6 +10,7 @@ import { Pagination } from '../../../components/ui/Pagination'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
+import { useDebounce } from '../../../hooks/useDebounced'
 
 const Header = styled.div`
   display: flex;
@@ -38,16 +39,11 @@ const Toolbar = styled.div`
 export function QuestionsDashboardPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [type, setType] = useState('all')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const limit = 20
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 300)
-    return () => clearTimeout(timeout)
-  }, [search])
+  const debouncedSearch = useDebounce(search);
 
   useEffect(() => setPage(1), [debouncedSearch])
 
