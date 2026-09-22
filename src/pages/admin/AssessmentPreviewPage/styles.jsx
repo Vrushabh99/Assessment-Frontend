@@ -20,11 +20,6 @@ export const AssessmentHeader = styled.div`
 `
 
 export const HeaderContent = styled.div`
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-width: 0;
 `
 
 export const HeaderActions = styled.div`

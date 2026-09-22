@@ -1,15 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { candidateAssessmentKeys, getCandidateAssessment } from '../../../api/attempts'
+import { CandidateAssessmentKeys, getCandidateAssessment } from '../../../api/attempts'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { CommonLoader } from '../../../components/ui/CommonLoader'
 import { Pill } from '../../../components/ui/Pill'
 import { Button } from '../../../components/ui/Button'
-import { Card, TitleRow, Title, Muted, Metadata, RulesList, Actions, ErrorState } from './styles'
+import { Card, TitleRow, Title, Muted, Metadata, RulesList, Actions, ErrorState, HeaderWrapper, HeaderActions } from './styles'
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
 import { formatMinutes, formatDate } from '../../../utils/helpers'
-
-
 
 const statusTone = {
   assigned: 'info',
@@ -43,7 +41,7 @@ export function AssessmentAttemptPage() {
   const { assignmentId } = useParams()
   const navigate = useNavigate()
   const query = useQuery({
-    queryKey: candidateAssessmentKeys.detail(assignmentId),
+    queryKey: CandidateAssessmentKeys.detail(assignmentId),
     queryFn: () => getCandidateAssessment({ assignmentId }),
   })
 
@@ -73,15 +71,23 @@ export function AssessmentAttemptPage() {
       {query.isError && <ErrorState role="alert">{query.error.message}</ErrorState>}
       {data && (
         <Card>
-          <div>
+          <HeaderWrapper>
             <TitleRow>
               <Title>{assessment.title}</Title>
               <Pill tone={statusTone[attempt.status] || 'neutral'}>{statusLabel[attempt.status] || attempt.status}</Pill>
               {isCancelled && <Pill tone="warning">Cancelled</Pill>}
               {!isCancelled && isExpired && attempt.status !== 'submitted' && <Pill tone="warning">Expired</Pill>}
+              {assignment.description && <Muted>{assignment.description}</Muted>}
             </TitleRow>
-            {assignment.description && <Muted>{assignment.description}</Muted>}
-          </div>
+            <HeaderActions>
+
+            <Button
+              onClick={() => navigate(-1)}
+            >
+              Back
+            </Button>
+            </HeaderActions>
+          </HeaderWrapper>
 
           <Metadata>
             <Pill tone="neutral">{assessment.questions.length} questions</Pill>

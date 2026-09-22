@@ -30,8 +30,10 @@ export function AssessmentPreviewPage() {
     <DashboardLayout title="Assessment details" role="Administrator" hideNavigation>
         <AssessmentHeader>
           <HeaderContent>
-          <Pill tone="warning">Preview for admin</Pill>
-            <h2>{assessment.title}</h2>
+            <Pill tone="warning">Preview for admin</Pill>
+            <h2>
+              {assessment.title}
+            </h2>
           </HeaderContent>
         </AssessmentHeader>
         <AppBar position='sticky' color='tranparent' style={{width: 340, display: 'flex',justifyContent: 'flex-end', marginLeft: 'auto', background: '#ffffff', padding: '8px'}}>

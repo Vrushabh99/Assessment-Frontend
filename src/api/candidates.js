@@ -4,7 +4,7 @@ export const CandidateKeys = {
   prefix: ['candidates'],
   all:  ({search = '', page = 1, limit = 20 }) => ['candidates', { search, page, limit }],
   detail: (id) => ['candidate', id],
-  candidateAttempts: ({ candidateId, page, limit, status }) => ['candidate-attempts', candidateId, { page, limit, status }],
+  candidateAttempts: (candidateId, { page, limit, status }) => ['candidate-attempts', candidateId, { page, limit, status }],
 }
 
 export const SubmissionKeys = {

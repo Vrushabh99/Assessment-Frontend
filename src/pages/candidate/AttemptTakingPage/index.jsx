@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
 import {
-  candidateAssessmentKeys,
+  CandidateAssessmentKeys,
   logViolation,
   saveAnswer,
   startAndGetAttemptState,
@@ -23,6 +23,8 @@ import { Timer } from '../../../components/ui/Timer'
 import { QuestionRenderer } from '../../../components/QuestionRenderer'
 import { QUESTION_RENDERER_MODES } from '../../../components/QuestionRenderer/constants'
 import { Card } from '../../../components/CommonStyles'
+import { LiveButton } from '../../../components/ui/LiveButton'
+import ModalComponent from '../../../components/ui/Modal'
 
 const Layout = styled.div`display: grid; gap: 16px;`
 const Header = styled.div`
@@ -48,7 +50,15 @@ const ActionWrapper = styled.div`
 
 
 const QuestionList = styled.div`display: grid; gap: 16px;`
-const SaveState = styled.span`font-size: 0.8rem; color: ${({ theme }) => theme.colors.muted};`
+const stateColors = {
+  saved: '#22c55e',    // green
+  pending: '#f59e0b',  // amber
+  error: '#ef4444',    // red
+}
+
+const SaveState = styled.span`
+  font-size: 1rem;
+  color: ${({ theme, state }) => stateColors[state] || theme?.colors?.text || '#666'}`;
 const Actions = styled.div`display: flex; justify-content: flex-end; gap: 12px; align-items: center;`
 const ErrorState = styled.p`color: #b42318;`
 
@@ -70,7 +80,7 @@ export function AttemptTakingPage() {
   const { assignmentId } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const stateKey = candidateAssessmentKeys.detail(assignmentId)
+  const stateKey = CandidateAssessmentKeys.detail(assignmentId)
   const [answers, setAnswers] = useState({})
   const [savingIds, setSavingIds] = useState({})
   const [submitError, setSubmitError] = useState(null)
@@ -78,15 +88,12 @@ export function AttemptTakingPage() {
   const [snackbar, setSnackbar] = useState({ open: false })
   const [fullscreenReady, setFullscreenReady] = useState(() => Boolean(document.fullscreenElement))
   const [fullscreenError, setFullscreenError] = useState(null)
+  const [submitModal, setSubmitModal] = useState({ open: false, message: ''});
 
   const stateQuery = useQuery({
-    queryKey: candidateAssessmentKeys.attempt( assignmentId),
+    queryKey: CandidateAssessmentKeys.attempt( assignmentId),
     queryFn: () => startAndGetAttemptState({  assignmentId }),
   })
-
-  useEffect(() => {
-    stateQuery.refetch()
-  }, [assignmentId])
 
   useEffect(() => {
     if (!stateQuery.data) return
@@ -115,8 +122,8 @@ export function AttemptTakingPage() {
   const submitMutation = useMutation({
     mutationFn: () => submitAttempt({  assignmentId }),
     onSuccess: () => {
+      setSubmitModal({ open: true, message: 'Attempt submitted successfully !!' });
       queryClient.invalidateQueries({ queryKey: stateKey })
-      navigate('/candidate')
     },
     onError: (error) => setSubmitError(error.message),
   })
@@ -171,8 +178,8 @@ export function AttemptTakingPage() {
     onSuccess: (data) => {
       if (data.autoSubmitted) {
         hasSubmittedRef.current = true
+        setSubmitModal({ open: true, message: 'Your attempt was submitted due to Violation !!'});
         queryClient.invalidateQueries({ queryKey: stateKey })
-        navigate(`/candidate/assignments`)
       }
     },
   })
@@ -273,10 +280,14 @@ export function AttemptTakingPage() {
   return (
     <DashboardLayout title="Assessment attempt" role="Candidate" hideNavigation>
       <Card>
-      {stateQuery.isLoading && <CommonLoader label="Loading assessment..." />}
-      {stateQuery.isError && <ErrorState role="alert">{stateQuery.error.message}</ErrorState>}
-      {submitError && <ErrorState role="alert">{submitError}</ErrorState>}
-      {stateQuery.data &&needsFullscreenGate && (
+      {!submitModal.open && (
+        <>
+        {stateQuery.isLoading && <CommonLoader label="Loading assessment..." />}
+        {stateQuery.isError && <ErrorState role="alert">{stateQuery.error.message}</ErrorState>}
+        {submitError && <ErrorState role="alert">{submitError}</ErrorState>}
+        </>
+      )}
+      {!submitModal.open && stateQuery.data && needsFullscreenGate && (
        <Header>
          <TitleBlock>
            <Title>{stateQuery.data.assessment.title}</Title>
@@ -291,10 +302,11 @@ export function AttemptTakingPage() {
          </Button>
        </Header>
      )}
-      {stateQuery.data && !needsFullscreenGate &&(
+      {!submitModal.open && stateQuery.data && !needsFullscreenGate &&(
         <Layout>
           <Header>
             <TitleBlock>
+              <LiveButton />
               <Title>{stateQuery.data.assessment.title}</Title>
             </TitleBlock>
           </Header>
@@ -325,7 +337,7 @@ export function AttemptTakingPage() {
                   onAnswer={(answer) => handleAnswer(question, answer)}
                 />
                 {!isSubmitted && savingIds[question._id] && (
-                  <SaveState>
+                  <SaveState state={savingIds[question._id]}>
                     {savingIds[question._id] === 'pending' && 'Saving...'}
                     {savingIds[question._id] === 'saved' && 'Saved'}
                     {savingIds[question._id] === 'error' && 'Failed to save'}
@@ -337,8 +349,21 @@ export function AttemptTakingPage() {
           <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>
             <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
           </Snackbar>
+
         </Layout>
       )}
+          <ModalComponent
+            open={submitModal.open}
+          >
+            <div>
+              {submitModal?.message || 'Assignment Submitted'}
+            </div>
+            <Button
+              onClick={() => navigate("/candidate")}
+            >
+              Back to Assignments
+            </Button>
+          </ModalComponent>
       </Card>
     </DashboardLayout>
   )

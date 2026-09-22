@@ -4,7 +4,7 @@ export const MyAttemptKeys = {
   all: ({page = 1, limit = 20, status, search}) => ['myAssessments', page, limit, status, search],
 }
 
-export const candidateAssessmentKeys = {
+export const CandidateAssessmentKeys = {
   detail: (assignmentId) => ['candidateAssessment',  assignmentId],
   attempt: (assignmentId) => ['attemptState',  assignmentId],
 }

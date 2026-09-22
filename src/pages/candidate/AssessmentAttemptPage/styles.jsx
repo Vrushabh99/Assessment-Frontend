@@ -10,11 +10,14 @@ export const Card = styled.section`
   box-shadow: 0 12px 32px ${({ theme }) => theme.colors.shadow};
 `
 
-export const TitleRow = styled.div`
+export const HeaderWrapper = styled.div`
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
+  justify-content: space-between;
+`
+
+export const HeaderActions = styled.div``
+
+export const TitleRow = styled.div`
 `
 
 export const Title = styled.h2`
