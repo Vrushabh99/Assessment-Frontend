@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Pill } from '../ui/Pill'
-import { CheckCircle, Cancel } from '@mui/icons-material';
-import { AnswerInput, CorrectIncorrectWrapper, Feedback, green, Option, OptionText, Options, OptionWrapper, QuestionCard, QuestionHeader, QuestionMeta, QuestionTitle, red, ScoreField } from './styles'
+import { AnswerInput, CorrectIncorrectWrapper, Feedback, CorrectIcon, InCorrectIcon, Option, OptionText, Options, OptionWrapper, QuestionCard, QuestionHeader, QuestionMeta, QuestionTitle, ScoreField } from './styles'
 import { QUESTION_RENDERER_MODES } from './constants'
 import { CheckBox } from '../ui/CheckBox';
 import { Radio } from '../ui/Radio';
@@ -41,15 +40,6 @@ export function QuestionRenderer({
   onScore,
   showCorrectAnswer = false,
 }) {
-
-  console.log(
-    question,
-  mode,
-  answer,
-  onAnswer,
-  score,
-  onScore,
-  showCorrectAnswer);
 
   const [localAnswer, setLocalAnswer] = useState(answer ?? (question.type === 'multiple-choice' ? [] : ''))
   const currentAnswer = answer === undefined ? localAnswer : answer
@@ -95,7 +85,7 @@ export function QuestionRenderer({
       <QuestionHeader>
         <QuestionTitle>{question.questionText}</QuestionTitle>
         <QuestionMeta>
-          {revealCorrect &&  question.type !== 'short-answer' && (
+          {revealCorrect && question.type !== 'short-answer' && !!currentAnswer.length && (
             <Pill tone={answerIsCorrect ? 'success' : 'warning'}>
               {answerIsCorrect ? 'Correct' : 'Incorrect'}
             </Pill>
@@ -140,17 +130,7 @@ export function QuestionRenderer({
                 {revealCorrect && (
                   <CorrectIncorrectWrapper>
                   {(selected || correct) && (
-                    <>
-                    {correct ? <CheckCircle
-                      sx={{
-                        fill: green,
-                      }}
-                    /> : <Cancel
-                      sx={{
-                        fill: red,
-                      }}
-                    />}
-                    </>
+                    correct ? <CorrectIcon /> : <InCorrectIcon />
                   )}
                   </CorrectIncorrectWrapper>
                 )}
@@ -175,11 +155,11 @@ export function QuestionRenderer({
               </OptionWrapper>
             )
           })}
-          {revealCorrect && (
+          {revealCorrect && currentAnswer?.length ? (
             <Feedback $correct={answerIsCorrect}>
               {answerIsCorrect ? 'Correct answer' : 'Candidate answer differs from the answer key'}
             </Feedback>
-          )}
+          ) : null}
         </Options>
       )}
 

@@ -1,8 +1,11 @@
+import { Cancel, CheckCircle } from '@mui/icons-material';
 import styled, { css } from 'styled-components'
 
 export const green = 'rgba(40, 167, 69, 1)';
 export const red = 'rgba(220, 53, 69, 1)';
 
+export const CorrectIcon = () => <CheckCircle sx={{ fill: green }} />
+export const InCorrectIcon = () => <Cancel sx={{ fill: red }} />
 export const QuestionCard = styled.article`
   display: grid;
   gap: 16px;

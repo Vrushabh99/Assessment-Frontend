@@ -13,6 +13,7 @@ import { CandidateManagementPage } from '../pages/admin/CandidateManagementPage'
 import { CandidateEditorPage } from '../pages/admin/CandidateEditorPage'
 import { QuestionsDashboardPage } from '../pages/admin/QuestionsDashboardPage'
 import { QuestionEditorPage } from '../pages/admin/QuestionEditorPage'
+import { AIAssessmentPage } from '../pages/admin/AIAssessmentPage'
 import { CandidateDashboardPage } from '../pages/candidate/CandidateDashboardPage'
 import { AssessmentAttemptPage } from '../pages/candidate/AssessmentAttemptPage'
 import { AttemptTakingPage } from '../pages/candidate/AttemptTakingPage'
@@ -40,6 +41,10 @@ export function AppRoutes() {
         <Route
           path="/admin/assessments/new"
           element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AssessmentEditorPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/ai-assessment"
+          element={<ProtectedRoute allowedRole={ROLES.ADMIN}><AIAssessmentPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/assessments/:assessmentId/edit"

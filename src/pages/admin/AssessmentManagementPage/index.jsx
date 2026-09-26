@@ -12,6 +12,7 @@ import { Pill } from '../../../components/ui/Pill'
 import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { useDebounce } from '../../../hooks/useDebounced'
+import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 
 const Header = styled.div`
   display: flex;
@@ -20,6 +21,12 @@ const Header = styled.div`
   gap: 16px;
   @media (max-width: 640px) { flex-direction: column; }
 `
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 12px;
+  @media (max-width: 640px) { flex-direction: column; }
+`;
+
 const Muted = styled.p`color: ${({ theme }) => theme.colors.muted};`
 const Card = styled.section`
   overflow: hidden;
@@ -86,14 +93,14 @@ export function AssessmentManagementPage() {
       page: page || 1,
       limit: limit || 20,
       search: debouncedSearch || '',
-      status: status === 'all' ? '' : status, 
+      status: status === 'all' ? '' : status,
     }
   }
   const assessmentsQuery = useQuery({
     queryKey: AssessmentKeys.all(getParams()),
     queryFn: () => listAssessments(getParams()),
   })
-  
+
   const assessments = useMemo(() => assessmentsQuery.data?.assessments || [], [assessmentsQuery.data])
   const deleteMutation = useMutation({
     mutationFn: deleteAssessment,
@@ -106,9 +113,11 @@ export function AssessmentManagementPage() {
 
   const getMenuItems = (assessment) => [
     { id: 'edit', label: 'Edit', onClick: () => navigate(`/admin/assessments/${assessment._id}/edit`) },
-    { id: 'view', label: 'Preview', onClick: () => {
-      window.open(`/admin/assessments/${assessment._id}/preview`, '_blank', 'noopener,noreferrer')    
-    }},
+    {
+      id: 'view', label: 'Preview', onClick: () => {
+        window.open(`/admin/assessments/${assessment._id}/preview`, '_blank', 'noopener,noreferrer')
+      }
+    },
     { id: 'assign', label: 'Assign', disabled: assessment.status !== 'published', onClick: () => navigate(`/admin/assessments/${assessment._id}/assign`) },
     { isDivider: true },
     { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id) },
@@ -121,12 +130,30 @@ export function AssessmentManagementPage() {
           <h2>Assessment catalog</h2>
           <Muted>Create, organize, and publish assessments from your question bank.</Muted>
         </div>
-        <Button type="button" onClick={() => navigate('/admin/assessments/new')}>+ Create assessment</Button>
+        <HeaderActions>
+
+          <Button
+            variant="primary"
+            startIcon={<AddIcon />}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5 }}
+            onClick={() => navigate('/admin/assessments/new')}
+          >
+            New Assessment
+          </Button>
+          <Button
+            variant="secondary"
+            startIcon={<AutoAwesomeIcon color="primary" />}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5 }}
+            onClick={() => navigate('/admin/ai-assessment')}
+          >
+            Generate with AI
+          </Button>
+        </HeaderActions>
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{'width': 270}}/>
-          <DropDown id="assessment-status-filter" aria-label="Filter assessments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} style={{'width': 200}}/>
+          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{ 'width': 270 }} />
+          <DropDown id="assessment-status-filter" aria-label="Filter assessments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} style={{ 'width': 200 }} />
         </Toolbar>
         {assessmentsQuery.isLoading && <CommonLoader label="Loading assessments..." />}
         {assessmentsQuery.isError && <EmptyState role="alert">{assessmentsQuery.error.message}</EmptyState>}
@@ -144,7 +171,7 @@ export function AssessmentManagementPage() {
                 </Metadata>
               </div>
               <CardActions>
-               <Menu trigger="⋮" items={getMenuItems(assessment)} />
+                <Menu trigger="⋮" items={getMenuItems(assessment)} />
               </CardActions>
             </AssessmentCard>
           ))}
