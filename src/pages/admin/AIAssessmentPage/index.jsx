@@ -27,6 +27,7 @@ import { DashboardLayout } from "../../../layouts/DashboardLayout";
 export const AIAssessmentPage = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const [prompt, setPrompt] = useState("");
     const [title, setTitle] = useState('');
     const [status, setStatus] = useState("draft");
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
@@ -51,9 +52,22 @@ export const AIAssessmentPage = () => {
             setGeneratedQuestions(formattedQuestions);
         } catch (error) {
             console.error("Error:", error);
+            setSnackBar({ open: true, message: "Error generating questions. Try Again !!", severity: "error" });
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleReset = () => {
+        setPrompt("");
+        setGeneratedQuestions([]);
+        setTitle('');
+        setStatus("draft");
+        setEditId(null);
+        setIsLoading(false);
+        setCount(5);
+        setDifficulty("medium");
+        setPoints(1);
     };
 
     const handleEditQuestion = (index) => {
@@ -119,18 +133,27 @@ export const AIAssessmentPage = () => {
 
                     <Form onSubmit={handleSave}>
                     {/* Settings */}
-                    {generatedQuestions.length > 0 && (
-                    <Grid item sx={{ mt: 2 }}>
+                    <Grid item sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                            <Button
+                                color="secondary"
+                                onClick={() => navigate(-1)}
+                            >
+                                Back
+                            </Button>
+                            <Button
+                                color="secondary"
+                                onClick={() => handleReset()}
+                            >
+                                Reset
+                            </Button>
                             <Button
                                 color="primary"
                                 type="submit"
                                 disabled={isLoading}
-                                style={{ marginLeft: "auto", display: "flex" }}
                             >
                                 Save Assessment
                             </Button>
                     </Grid>
-                    )}
                     <Grid item sx={{ mt: 2 }}>
                         <TextField
                             label="Assessment Title"
@@ -196,6 +219,8 @@ export const AIAssessmentPage = () => {
 
                     <Grid spacing={2}>
                         <PromptInput
+                            prompt={prompt}
+                            onChange={setPrompt}
                             onSubmit={handlePromptSubmit}
                             isLoading={isLoading}
                             placeholder="Enter a topic to generate questions for (e.g., Indian History, World War II, Economics)..."

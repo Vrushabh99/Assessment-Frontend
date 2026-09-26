@@ -35,7 +35,10 @@ export async function updateAssessment({ id, ...assessment }) {
   return response.data
 }
 
-export async function deleteAssessment(id) {
-  const response = await apiRequest(`/admin/assessments/${id}`, { method: 'DELETE' })
+export async function deleteAssessment({ id, deleteQuestions = false }) {
+  const response = await apiRequest(`/admin/assessments/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ deleteQuestions })
+  })
   return response.data
 }

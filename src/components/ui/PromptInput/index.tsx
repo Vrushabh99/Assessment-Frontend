@@ -13,6 +13,8 @@ import { Wrapper, ActionWrapper } from "./styles";
 import { Button } from "../Button";
 
 interface PromptInputProps {
+  prompt: string;
+  onChange: (value: string) => void;
   onSubmit: (prompt: string) => void;
   isLoading?: boolean;
   placeholder?: string;
@@ -20,17 +22,17 @@ interface PromptInputProps {
 }
 
 export const PromptInput: React.FC<PromptInputProps> = ({
+  prompt,
+  onChange,
   onSubmit,
   isLoading = false,
   placeholder = "Enter your prompt...",
   disabled = false,
 }) => {
-  const [value, setValue] = useState("");
 
   const handleSubmit = () => {
-    if (value.trim() && !isLoading) {
-      onSubmit(value);
-      setValue("");
+    if (prompt.trim() && !isLoading) {
+      onSubmit(prompt);
     }
   };
 
@@ -42,7 +44,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   };
 
   const handleClear = () => {
-    setValue("");
+    onChange("");
   };
 
   return (
@@ -52,8 +54,8 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         multiline
         maxRows={4}
         minRows={4}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
+        value={prompt}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={isLoading || disabled}
@@ -78,7 +80,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
       />
      <ActionWrapper>
       <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
-        {value.trim() && (
+        {prompt.trim() && (
           <Tooltip title="Clear">
             <span>
               <IconButton
@@ -100,7 +102,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
           variant="icon"
           title="Send (Shift+Enter for new line)"
           onClick={handleSubmit}
-          disabled={!value.trim() || isLoading}
+          disabled={!prompt.trim() || isLoading}
         >
           {isLoading ? (
                 <CircularProgress size={20} sx={{ color: "inherit" }} />

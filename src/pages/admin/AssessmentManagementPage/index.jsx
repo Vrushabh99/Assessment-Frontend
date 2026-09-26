@@ -13,6 +13,7 @@ import { DropDown } from '../../../components/ui/DropDown'
 import { TextField } from '../../../components/ui/TextField'
 import { useDebounce } from '../../../hooks/useDebounced'
 import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+import { Alert, Snackbar } from '@mui/material'
 
 const Header = styled.div`
   display: flex;
@@ -78,8 +79,8 @@ const statusTone = { draft: 'warning', published: 'success', archived: 'neutral'
 export function AssessmentManagementPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info'})
   const [search, setSearch] = useState('')
-
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const limit = 20
@@ -104,11 +105,17 @@ export function AssessmentManagementPage() {
   const assessments = useMemo(() => assessmentsQuery.data?.assessments || [], [assessmentsQuery.data])
   const deleteMutation = useMutation({
     mutationFn: deleteAssessment,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: AssessmentKeys.all }),
+    onSuccess: () => {
+      setSnackbar({ open: true, message: 'Assessment deleted successfully', severity: 'success' })
+      queryClient.invalidateQueries({ queryKey: AssessmentKeys.prefix })
+    },
+    onError: (error) => {
+      setSnackbar({ open: true, message: error.message || 'An error occurred', severity: 'error' })
+    }
   })
 
-  const handleDelete = async (assessmentId) => {
-    await deleteMutation.mutateAsync(assessmentId)
+  const handleDelete = async (assessmentId, deleteQuestions = false) => {
+    await deleteMutation.mutateAsync({ id: assessmentId, deleteQuestions })
   }
 
   const getMenuItems = (assessment) => [
@@ -120,7 +127,8 @@ export function AssessmentManagementPage() {
     },
     { id: 'assign', label: 'Assign', disabled: assessment.status !== 'published', onClick: () => navigate(`/admin/assessments/${assessment._id}/assign`) },
     { isDivider: true },
-    { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id) },
+    { id: 'delete', label: 'Delete', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id, false) },
+    { id: 'delete-with-questions', label: 'Delete and remove questions', danger: true, disabled: deleteMutation.isPending, onClick: () => handleDelete(assessment._id, true) },
   ]
 
   return (
@@ -131,7 +139,14 @@ export function AssessmentManagementPage() {
           <Muted>Create, organize, and publish assessments from your question bank.</Muted>
         </div>
         <HeaderActions>
-
+          <Button
+            variant="secondary"
+            startIcon={<AutoAwesomeIcon />}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, px: 2.5, backgroundColor: '#eef1ff', color: '#4055c7' }}
+            onClick={() => navigate('/admin/ai-assessment')}
+          >
+            Generate with AI
+          </Button>
           <Button
             variant="primary"
             startIcon={<AddIcon />}
@@ -140,19 +155,11 @@ export function AssessmentManagementPage() {
           >
             New Assessment
           </Button>
-          <Button
-            variant="secondary"
-            startIcon={<AutoAwesomeIcon color="primary" />}
-            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5 }}
-            onClick={() => navigate('/admin/ai-assessment')}
-          >
-            Generate with AI
-          </Button>
         </HeaderActions>
       </Header>
       <Card>
         <Toolbar>
-          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{ 'width': 270 }} />
+          <TextField id="assessment-search" aria-label="Search assessments" placeholder="Search assessments" value={search} onChange={(event) => setSearch(event.target.value)} style={{ 'width': 300 }} />
           <DropDown id="assessment-status-filter" aria-label="Filter assessments by status" value={status} onChange={(event) => setStatus(event.target.value)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} style={{ 'width': 200 }} />
         </Toolbar>
         {assessmentsQuery.isLoading && <CommonLoader label="Loading assessments..." />}
@@ -162,7 +169,10 @@ export function AssessmentManagementPage() {
           {assessments.map((assessment) => (
             <AssessmentCard key={assessment._id}>
               <div>
-                <AssessmentTitle>{assessment.title}</AssessmentTitle>
+                <AssessmentTitle>
+                  {assessment.title} &nbsp;
+                  {assessment.tags?.includes('AI') && <Pill tone="info"><AutoAwesomeIcon color="primary" fontSize="xs" />&nbsp;AI</Pill>}
+                </AssessmentTitle>
                 <Metadata>
                   <span>{assessment.questionIds?.length || 0} questions</span>
                   <span>•</span>
@@ -184,6 +194,14 @@ export function AssessmentManagementPage() {
           itemLabel="assessments"
         />
       </Card>
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((current) => ({ ...current, open: false }))}>{snackbar.message}</Alert>
+      </Snackbar>
     </DashboardLayout>
   )
 }

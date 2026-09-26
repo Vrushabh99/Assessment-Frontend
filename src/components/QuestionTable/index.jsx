@@ -1,6 +1,7 @@
 import { QuestionGridWrapper, QuestionCard, QuestionContent, QuestionId, QuestionText, QuestionMetadata, CardActions, EmptyState } from './styles'
 import { Menu } from '../ui/Menu'
 import { Pill } from '../ui/Pill'
+import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material'
 
 const formatLabel = (value) => value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
 const getTone = (value) => ({
@@ -29,7 +30,10 @@ export function QuestionTable({ questions, onEdit, onDelete }) {
       {questions.map((question) => (
         <QuestionCard key={question.id}>
           <QuestionContent>
-              <QuestionId>QP-{question.qp_number}</QuestionId>
+              <QuestionId>
+                QP-{question.qp_number} &nbsp;
+                {question.tags?.includes('AI') && <Pill tone="info"><AutoAwesomeIcon color="primary" fontSize="xs" />&nbsp;AI</Pill>}
+              </QuestionId>
               <QuestionText>{question.questionText}</QuestionText>
             <QuestionMetadata>
               <Pill tone={getTone(question.type)}>{formatLabel(question.type)}</Pill>

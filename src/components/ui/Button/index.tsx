@@ -62,7 +62,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           gap: "8px",
           borderRadius: "8px",
           fontWeight: 600,
-          padding: "11px 16px",
+          padding: "8px 10px",
           textTransform: "none",
           fontSize: "1rem",
           transition: "all 0.2s ease",

@@ -12,6 +12,7 @@ import { TextField } from '../../../components/ui/TextField'
 import { Pagination } from '../../../components/ui/Pagination'
 import { formatDate, formatMinutes, isOlderTime } from '../../../utils/helpers'
 import { useDebounce } from '../../../hooks/useDebounced'
+import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material'
 
 const Header = styled.div`
   display: flex;
@@ -196,7 +197,10 @@ export function AssignmentManagementPage() {
               <AssignmentCard key={assignment._id || assignment.id}>
                 <AssignmentContent>
                   <AssignmentTitleRow>
-                    <AssignmentTitle>{assessment.title || assignment.assessmentTitle || 'Untitled assessment'}</AssignmentTitle>
+                    <AssignmentTitle>
+                      {assessment.title || assignment.assessmentTitle || 'Untitled assessment'} &nbsp;
+                      {assessment.tags?.includes('AI') && <Pill tone="info"><AutoAwesomeIcon color="primary" fontSize="xs" />&nbsp;AI</Pill>}
+                    </AssignmentTitle>
                     <Pill tone={statusTone[isExpired ? 'expired' : assignment.status] || 'neutral'}>{isExpired ? 'expired' : 'active'}</Pill>
                   </AssignmentTitleRow>
                   {assignment.description && <AssignmentDescription>{assignment.description}</AssignmentDescription>}
