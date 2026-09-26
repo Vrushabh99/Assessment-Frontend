@@ -68,6 +68,10 @@ export const UserInfo = styled.div`
     span { display: none; }
   }
 `
+export const UserRole = styled.span`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.85rem;
+`;
 
 export const PageHeading = styled.div`
   padding: 16px 0 16px;

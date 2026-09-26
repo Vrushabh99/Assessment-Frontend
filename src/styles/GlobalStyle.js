@@ -9,6 +9,11 @@ export const GlobalStyle = createGlobalStyle`
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+
+    * :focus-visible {
+      outline: 2px solid ${({ theme }) => theme.colors.primary};
+      outline-offset: -2px;
+    }
   }
 
   *, *::before, *::after { box-sizing: border-box; }

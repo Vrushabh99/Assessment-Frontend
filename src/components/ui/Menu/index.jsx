@@ -46,7 +46,6 @@ export function Menu({ trigger, items, icon, disabled }) {
               mt: 1,
               minWidth: 200,
               borderRadius: 2,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
             },
           },
         }}

@@ -8,7 +8,8 @@ export const theme = createTheme({
     border: '#e3e8f0',
     inputBorder: '#d0d5dd',
     muted: '#667085',
-    primary: '#536dfe',
+    primary: '#4055c7',
+    divider: '#e3e8f0',
     primarySoft: '#eef1ff',
     primaryText: '#4055c7',
     danger: '#b42318',
@@ -16,17 +17,6 @@ export const theme = createTheme({
     successText: '#18713b',
     shadow: 'rgb(23 32 51 / 6%)',
     overlay: 'rgb(23 32 51 / 45%)',
-  },
-  palette: {
-    primary: { main: '#536dfe' },
-    background: { default: '#f5f7fb', paper: '#ffffff' },
-    text: { primary: '#172033', secondary: '#667085' },
-    divider: '#e3e8f0',
-    error: { main: '#b42318' },
-    success: { main: '#18713b' },
-    AppBar: {
-      defaultBg: '#ffffff',
-    }
   },
   components: {
     MuiAppBar: {

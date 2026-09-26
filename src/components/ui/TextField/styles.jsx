@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-export const Field = styled.div`display: grid; gap: 6px;`
+export const Field = styled.div`display: flex; gap: 6px; flex-direction: column;  width: 100%;`
 export const Label = styled.label`font-weight: 600;`
 const Control = styled.input`
   border: 1px solid ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.inputBorder}; border-radius: 8px;

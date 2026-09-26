@@ -6,7 +6,7 @@ export function TextField({ label, multiline = false, error = false, helperText 
   return (
     <Field>
       {label && <Label htmlFor={props.id}>{label}</Label>}
-      <Control $error={error} aria-invalid={error || undefined} {...props} />
+      <Control $error={error} aria-invalid={error || undefined} {...props} aria-label={label} />
       {helperText && <ErrorMessage>{helperText}</ErrorMessage>}
     </Field>
   )

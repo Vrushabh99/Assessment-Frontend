@@ -15,4 +15,10 @@ export const ButtonBase = styled.button`
   border: 1px solid ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.primary : theme.colors.border};
   background: ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.primary : theme.colors.surface};
   color: ${({ $variant, theme }) => $variant === 'primary' ? theme.colors.surface : theme.colors.text};
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 `
+;

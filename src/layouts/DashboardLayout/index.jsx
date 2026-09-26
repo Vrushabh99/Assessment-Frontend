@@ -5,7 +5,7 @@ import Avatar from '@mui/material/Avatar'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { theme } from '../../styles/theme'
-import { Brand, Container, Content, Dashboard, Eyebrow, Navigation, NavigationLink, PageHeading, Topbar, UserInfo, UserMenu } from './styles'
+import { Brand, Container, Content, Dashboard, Eyebrow, Navigation, NavigationLink, PageHeading, Topbar, UserInfo, UserRole,UserMenu } from './styles'
 
 export function DashboardLayout({ title, role, hideNavigation, children }) {
   const navigate = useNavigate()
@@ -35,7 +35,8 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
               onClick={(event) => setProfileAnchor(event.currentTarget)}
               sx={{
                 p: 0.25,
-                '&:focus-visible': { outline: '3px solid', outlineColor: theme.colors.primarySoft },
+                borderRadius: '0%',
+                '&:focus-visible': { outline: `3px solid ${theme.colors.primary}` },
               }}
             >
               <Avatar
@@ -56,7 +57,7 @@ export function DashboardLayout({ title, role, hideNavigation, children }) {
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
               <UserInfo>
                 <strong>{user ? `${user.firstName} ${user.lastName}` : role}</strong>
-                <span>{role}</span>
+                <UserRole>{role}</UserRole>
               </UserInfo>
             </Box>
             </IconButton>
