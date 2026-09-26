@@ -59,6 +59,7 @@ const Muted = styled.p`
   color: ${({ theme }) => theme.colors.muted};
   margin: 0;
   font-size: 0.9rem;
+  white-space: nowrap;
 `
 
 const Divider = styled.hr`
@@ -391,6 +392,7 @@ export function SubmissionViewPage() {
                     <GradingSection>
                       <FormRow>
                         <ScoreWrapper>
+                          Grade&nbsp;:&nbsp;
                           <NumberField
                             id={`score-${question.questionId}`}
                             min="0"
@@ -401,7 +403,7 @@ export function SubmissionViewPage() {
                             }
                             placeholder="Score"
                             />
-                          /
+                          &nbsp;/&nbsp;
                           <Muted>{question.maxScore || 10} points</Muted>
                         </ScoreWrapper>
                       <ButtonGroup>
@@ -409,7 +411,7 @@ export function SubmissionViewPage() {
                           onClick={() => handleSaveGrade(question.questionId)}
                           disabled={gradeMutation.isPending}
                         >
-                          {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
+                          {gradeMutation.isPending ? 'Saving...' : 'Save'}
                         </Button>
                       </ButtonGroup>
                       </FormRow>
