@@ -1,4 +1,4 @@
-export const formatSeconds = (totalSeconds) => {
+export const formatSeconds = (totalSeconds: number): string => {
   const clamped = Math.max(0, Math.floor(totalSeconds))
   const hours = Math.floor(clamped / 3600)
   const minutes = Math.floor((clamped % 3600) / 60)
@@ -10,7 +10,7 @@ export const formatSeconds = (totalSeconds) => {
   return `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m:${String(seconds).padStart(2, '0')}s`
 }
 
-export const formatMinutes = (input) => {
+export const formatMinutes = (input: number): string => {
   const clamped = Math.max(0, Math.floor(input))
   const hours = Math.floor(clamped / 60)
   const minutes = Math.floor(clamped % 60)
@@ -24,7 +24,11 @@ export const formatMinutes = (input) => {
   return `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m`
 }
 
-export const formatDate = (value, options = {}) => {
+interface FormatDateOptions {
+  seconds?: boolean;
+}
+
+export const formatDate = (value: string | Date | null | undefined, options: FormatDateOptions = {}): string => {
   const { seconds = false } = options;
   if (!value) return '-'
   const date = new Date(value)
@@ -41,7 +45,7 @@ export const formatDate = (value, options = {}) => {
   })}`
 }
 
-export const isOlderTime = (value) => {
+export const isOlderTime = (value: string | Date | null | undefined): boolean => {
   if (!value) return false
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? false : date < new Date()

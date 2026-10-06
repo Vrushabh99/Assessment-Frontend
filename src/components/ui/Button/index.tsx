@@ -10,9 +10,18 @@ interface ButtonProps extends Omit<MuiButtonProps, "variant"> {
   title?: string; // For Icon Only Button
 }
 
+interface ThemeColors {
+  colors: {
+    primary: string;
+    surface: string;
+    text: string;
+    border: string;
+  };
+}
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", title, disabled, children, sx, ...props }, ref) => {
-    const theme = useTheme() as any;
+    const theme = useTheme() as ThemeColors;
 
     const variantConfig = useMemo(
       () => ({

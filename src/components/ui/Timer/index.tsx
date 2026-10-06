@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom'
 import { formatSeconds } from '../../../utils/helpers'
 
-const TimerDisplay = styled.div`
+interface TimerDisplayProps {
+  $warning?: boolean;
+}
+
+const TimerDisplay = styled.div<TimerDisplayProps>`
   font-size: 1.4rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -12,8 +15,14 @@ const TimerDisplay = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: ${({ $warning, theme }) => ($warning ? '#b54708' : theme.colors.text)};
+  color: ${({ $warning, theme }) => ($warning ? '#b54708' : (theme as Record<string, any>).colors.text)};
 `
+
+interface UseCountdownOptions {
+  minutes: number | null;
+  active?: boolean;
+  onExpire?: () => void;
+}
 
 /**
  * Drift-resistant countdown: computes remaining time from a fixed start
@@ -21,11 +30,11 @@ const TimerDisplay = styled.div`
  * decrementing a counter — so background-tab throttling or a slow render
  * can't cause the timer to run long.
  */
-const useCountdown = ({ minutes, active = true, onExpire }) => {
-  const [remainingMs, setRemainingMs] = useState(minutes != null ? minutes * 60 * 1000 : null)
-  const intervalRef = useRef(null)
-  const onExpireRef = useRef(onExpire)
-  const hasExpiredRef = useRef(false)
+const useCountdown = ({ minutes, active = true, onExpire }: UseCountdownOptions): number | null => {
+  const [remainingMs, setRemainingMs] = useState<number | null>(minutes != null ? minutes * 60 * 1000 : null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const onExpireRef = useRef<(() => void) | undefined>(onExpire)
+  const hasExpiredRef = useRef<boolean>(false)
 
   useEffect(() => {
     onExpireRef.current = onExpire
@@ -64,6 +73,13 @@ const useCountdown = ({ minutes, active = true, onExpire }) => {
   return remainingMs
 }
 
+interface TimerProps extends React.HTMLAttributes<HTMLDivElement> {
+  minutes?: number | null;
+  active?: boolean;
+  warningMinutes?: number;
+  onExpire?: () => void;
+}
+
 /**
  * <Timer minutes={45} onExpire={handleSubmit} />
  *
@@ -74,12 +90,19 @@ const useCountdown = ({ minutes, active = true, onExpire }) => {
  *   to the warning color.
  * - onExpire: called exactly once when the countdown reaches zero.
  */
-export const Timer = ({ minutes, active, warningMinutes, onExpire, ...rest }) => {
+// eslint-disable-next-line react/prop-types
+export const Timer: React.FC<TimerProps> = ({ 
+  minutes = null,
+  active = true,
+  warningMinutes = 5,
+  onExpire,
+  ...rest 
+}) => {
   const remainingMs = useCountdown({ minutes, active, onExpire })
 
   if (!active || remainingMs === null) return null
 
-  const isWarning = remainingMs <= warningMinutes * 60 * 1000
+  const isWarning = warningMinutes != null && remainingMs <= warningMinutes * 60 * 1000
 
   return (
     <TimerDisplay $warning={isWarning} aria-label="Time remaining" {...rest}>
@@ -87,18 +110,4 @@ export const Timer = ({ minutes, active, warningMinutes, onExpire, ...rest }) =>
       {formatSeconds(remainingMs / 1000)}
     </TimerDisplay>
   )
-}
-
-Timer.propTypes = {
-  minutes: PropTypes.number,
-  active: PropTypes.bool,
-  warningMinutes: PropTypes.number,
-  onExpire: PropTypes.func,
-}
-
-Timer.defaultProps = {
-  minutes: null,
-  active: true,
-  warningMinutes: 5,
-  onExpire: undefined,
 }
