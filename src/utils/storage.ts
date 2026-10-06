@@ -1,4 +1,4 @@
-export function readStoredValue(key, fallback = null) {
+export function readStoredValue(key: string, fallback = null): string | null {
   const value = window.localStorage.getItem(key)
   if (!value) return fallback
 
@@ -9,6 +9,6 @@ export function readStoredValue(key, fallback = null) {
   }
 }
 
-export function writeStoredValue(key, value) {
+export function writeStoredValue(key: string, value: unknown) {
   window.localStorage.setItem(key, JSON.stringify(value))
 }
